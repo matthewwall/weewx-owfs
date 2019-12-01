@@ -1,0 +1,61 @@
+0.21 07aug2017
+* added closePort method to driver with call to ow.finish
+
+0.20 03mar2017
+* do not force windDir to None when windSpeed is zero
+
+0.19 27nov2016
+* provide more details when reporting sensor read failures
+
+0.18 21jan2016
+* deal with case where there is no data in owfs packet to be merged
+
+0.17 28oct2015
+* catch exceptions while enumerating sensor readings
+
+0.16 27oct2015
+* include DRIVER_VERSION and DRIVER_NAME for better weewx 3.2 compatibility
+
+0.15 14oct2015
+* update readme with weewx 3.x instructions
+
+0.14 01sep2015
+* handle case where vdd is zero or None
+
+0.13 05may2015
+* big change to error handling.  no maxtries or retries any more.  if one
+  sensor reading fails, others will continue.  if all fail, retry continually.
+
+0.12 26dec2014
+* rainwise rain bucket is counter, not delta (thanks to Howard Walter)
+
+0.11 06dec2014
+* consolidated owfs.py and owfss.py into single codebase
+* added explicit support for ads, inspeed, aag windspeed
+* added explicit support for rainwise rain bucket
+* fixed syntax errors in install.py (thanks to Howard Walter)
+* fixed units/unit_system bug in OWFSService
+
+0.8
+* fixed VERSION tag
+
+0.7
+* fixed typo in last_data arg to func invocation (thank you patlambe)
+
+0.6
+* begin support for specific one-wire devices
+* added support for ads wind direction
+* added support for tai wind direction
+* added support for inspeed wind direction
+* added calculation of derived quantities
+* fix locale conversion fix from poor implementation in v0.3
+* added option for testing a single sensor reading
+* added 'counter' type
+* added examples of ads/tai/inspeed calibrations
+* do not update last data unless a valid packet is returned
+
+0.3
+* make conversions insensitive to locale
+
+0.2 01feb2014
+* initial release as packaged weewx extension
