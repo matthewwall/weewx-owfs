@@ -249,7 +249,7 @@ except ImportError:
 
 
 DRIVER_NAME = 'OWFS'
-DRIVER_VERSION = "X"
+DRIVER_VERSION = "0.21"
 
 def logmsg(level, msg):
     syslog.syslog(level, 'owfs: %s' % msg)
