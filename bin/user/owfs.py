@@ -191,6 +191,9 @@ import weewx
 from weewx.drivers import AbstractDevice
 from weewx.engine import StdService
 
+DRIVER_NAME = 'OWFS'
+DRIVER_VERSION = "0.22"
+
 
 class OWError(Exception):
     pass
@@ -270,11 +273,11 @@ except ImportError:
         raise Exception("No one-wire library found")
 
 
-DRIVER_NAME = 'OWFS'
-DRIVER_VERSION = "0.22"
-
 def get_float(path):
-    sv = ow.get(path)
+    try:
+        sv = ow.get(path)
+    except TypeError:
+        sv = ow.get(path.encode())
     sv = sv.replace(',','.')
     v = float(sv)
     return v
@@ -467,7 +470,7 @@ def loader(config_dict, engine):
 
 class OWFSDriver(weewx.drivers.AbstractDevice):
     """Driver for one-wire sensors via owfs."""
-    
+
     def __init__(self, **stn_dict) :
         """Initialize the driver.
 
@@ -503,7 +506,10 @@ class OWFSDriver(weewx.drivers.AbstractDevice):
         loginf('sensor type map is %s' % self.sensor_type)
         loginf('polling interval is %s' % str(self.polling_interval))
         loginf('sensor unit system is %s' % self.unit_system)
-        ow.init(self.interface)
+        try:
+            ow.init(self.interface)
+        except TypeError:
+            ow.init(self.interface.encode())
 
         # open all 1-wire channels on a Hobby Boards 4-channel hub.  see:
         #   http://owfs.org/index.php?page=4-channel-hub
@@ -574,7 +580,11 @@ class OWFSService(weewx.engine.StdService):
         loginf('sensor type map is %s' % self.sensor_type)
         loginf('sensor unit system is %s' % self.unit_system)
 
-        ow.init(self.interface)
+        try:
+            ow.init(self.interface)
+        except TypeError:
+            ow.init(self.interface.encode())
+
         if self.binding == 'loop':
             self.bind(weewx.NEW_LOOP_PACKET, self.handle_new_loop)
         else:
@@ -625,7 +635,7 @@ class OWFSService(weewx.engine.StdService):
             if 'usUnits' in p:
                 del p['usUnits']
         return p
-    
+
 
 # define a main entry point for basic testing without weewx engine and service
 # overhead.  invoke this as follows from the weewx root dir:
