@@ -160,7 +160,6 @@ Hobby-Boards with Inspeed wind instrument
 # FIXME: automatically detect each sensor type
 # FIXME: automatically detect per-sensor units
 
-import syslog
 import time
 
 try:
@@ -212,8 +211,8 @@ class OWFSBinding(object):
         import ow as owbinding
         try:
             owbinding.init(iface)
-        except owbinding.exError as e:
-            raise OWError(e)
+        except TypeError:
+            owbinding.init(iface.encode())
     def finish(self):
         import ow as owbinding
         try:
@@ -468,7 +467,7 @@ SENSOR_TYPES = {
 def loader(config_dict, engine):
     return OWFSDriver(**config_dict['OWFS'])
 
-class OWFSDriver(weewx.drivers.AbstractDevice):
+class OWFSDriver(AbstractDevice):
     """Driver for one-wire sensors via owfs."""
 
     def __init__(self, **stn_dict) :
@@ -506,10 +505,8 @@ class OWFSDriver(weewx.drivers.AbstractDevice):
         loginf('sensor type map is %s' % self.sensor_type)
         loginf('polling interval is %s' % str(self.polling_interval))
         loginf('sensor unit system is %s' % self.unit_system)
-        try:
-            ow.init(self.interface)
-        except TypeError:
-            ow.init(self.interface.encode())
+
+        ow.init(self.interface)
 
         # open all 1-wire channels on a Hobby Boards 4-channel hub.  see:
         #   http://owfs.org/index.php?page=4-channel-hub
@@ -547,7 +544,7 @@ class OWFSDriver(weewx.drivers.AbstractDevice):
         ow.finish()
 
 
-class OWFSService(weewx.engine.StdService):
+class OWFSService(StdService):
     """Collect data from one-wire devices via owfs."""
 
     def __init__(self, engine, config_dict):
@@ -580,10 +577,7 @@ class OWFSService(weewx.engine.StdService):
         loginf('sensor type map is %s' % self.sensor_type)
         loginf('sensor unit system is %s' % self.unit_system)
 
-        try:
-            ow.init(self.interface)
-        except TypeError:
-            ow.init(self.interface.encode())
+        ow.init(self.interface)
 
         if self.binding == 'loop':
             self.bind(weewx.NEW_LOOP_PACKET, self.handle_new_loop)
@@ -646,7 +640,7 @@ if __name__ == '__main__':
 
     def main():
         import optparse
-        syslog.openlog('wee_owfs', syslog.LOG_PID | syslog.LOG_CONS)
+
         parser = optparse.OptionParser(usage=usage)
         parser.add_option('--version', dest='version', action='store_true',
                           help='display driver version')
@@ -669,10 +663,7 @@ if __name__ == '__main__':
         # default to usb for the interface
         iface = options.iface if options.iface is not None else 'u'
 
-        if options.debug is not None:
-            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
-        else:
-            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
+#        weeutil.logger.setup('owfs', {})
 
         if options.sensors:
             ow.init(iface)
