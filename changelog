@@ -1,5 +1,6 @@
 0.22 02jan2020
 * support for python3 and weewx4
+* support for ownet as well as owfs
 
 0.21 07aug2017
 * added closePort method to driver with call to ow.finish
