@@ -1,5 +1,5 @@
 owfs - weewx driver for one-wire devices via one-wire file system (OWFS)
-Copyright 2014 Matthew Wall
+Copyright 2014-2020 Matthew Wall
 
 Installation instructions:
 

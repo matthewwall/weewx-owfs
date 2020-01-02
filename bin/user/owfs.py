@@ -1,7 +1,5 @@
 #!/usr/bin/python
-# $Id: owfs.py 1792 2019-01-10 13:20:43Z mwall $
-#
-# Copyright 2013 Matthew Wall
+# Copyright 2013-2020 Matthew Wall
 # Thanks to Mark Cressey (onewireweewx) and Howard Walter (TAI code).
 #
 # This program is free software: you can redistribute it and/or modify it under
@@ -165,6 +163,30 @@ Hobby-Boards with Inspeed wind instrument
 import syslog
 import time
 
+try:
+    # weewx4 logging
+    import weeutil.logger
+    import logging
+    log = logging.getLogger(__name__)
+    def logdbg(msg):
+        log.debug(msg)
+    def loginf(msg):
+        log.info(msg)
+    def logerr(msg):
+        log.error(msg)
+except ImportError:
+    # old-style weewx logging
+    import syslog
+    def logmsg(level, msg):
+        syslog.syslog(level, 'owfs: %s' % msg)
+    def logdbg(msg):
+        logmsg(syslog.LOG_DEBUG, msg)
+    def loginf(msg):
+        logmsg(syslog.LOG_INFO, msg)
+    def logerr(msg):
+        logmsg(syslog.LOG_ERR, msg)
+
+
 import weewx
 from weewx.drivers import AbstractDevice
 from weewx.engine import StdService
@@ -187,25 +209,25 @@ class OWFSBinding(object):
         import ow as owbinding
         try:
             owbinding.init(iface)
-        except owbinding.exError, e:
+        except owbinding.exError as e:
             raise OWError(e)
     def finish(self):
         import ow as owbinding
         try:
             owbinding.finish()
-        except owbinding.exError, e:
+        except owbinding.exError as e:
             raise OWError(e)
     def get(self, path):
         import ow as owbinding
         try:
             return owbinding.owfs_get(path)
-        except owbinding.exError, e:
+        except owbinding.exError as e:
             raise OWError(e)
     def put(self, path, value):
         import ow as owbinding
         try:
             owbinding.owfs_put(path, value)
-        except owbinding.exError, e:
+        except owbinding.exError as e:
             raise OWError(e)
 
 class OWNetBinding(object):
@@ -224,19 +246,19 @@ class OWNetBinding(object):
         import pyownet
         try:
             self.proxy = pyownet.protocol.proxy(host=host, port=port)
-        except pyownet.Error, e:
+        except pyownet.Error as e:
             raise OWError(e)
     def finish(self):
         self.proxy = None
     def get(self, path):
         try:
             return self.proxy.read(path)
-        except pyownet.Error, e:
+        except pyownet.Error as e:
             raise OWError(e)
     def put(self, path, value):
         try:
             self.proxy.write(path, value)
-        except pyownet.Error, e:
+        except pyownet.Error as e:
             raise OWError(e)
 
 try:
@@ -249,19 +271,7 @@ except ImportError:
 
 
 DRIVER_NAME = 'OWFS'
-DRIVER_VERSION = "0.21"
-
-def logmsg(level, msg):
-    syslog.syslog(level, 'owfs: %s' % msg)
-
-def logdbg(msg):
-    logmsg(syslog.LOG_DEBUG, msg)
-
-def loginf(msg):
-    logmsg(syslog.LOG_INFO, msg)
-
-def logerr(msg):
-    logmsg(syslog.LOG_ERR, msg)
+DRIVER_VERSION = "0.22"
 
 def get_float(path):
     sv = ow.get(path)
@@ -518,7 +528,7 @@ class OWFSDriver(weewx.drivers.AbstractDevice):
                         func = SENSOR_TYPES[st]
                         p[s] = func(s, self.sensor_map[s],
                                     last_data, p['dateTime'])
-                    except (OWError, ValueError), e:
+                    except (OWError, ValueError) as e:
                         logerr("Failed to get sensor data for %s (%s): %s" %
                                (s, st, e))
                 else:
@@ -601,7 +611,7 @@ class OWFSService(weewx.engine.StdService):
                 try:
                     p[s] = func(s, self.sensor_map[s],
                                 last_data, packet['dateTime'])
-                except (OWError, ValueError), e:
+                except (OWError, ValueError) as e:
                     logerr("Failed to get onewire data for %s (%s): %s" %
                            (s, st, e))
             else:
@@ -643,7 +653,7 @@ if __name__ == '__main__':
         (options, args) = parser.parse_args()
 
         if options.version:
-            print "owfs version %s" % DRIVER_VERSION
+            print("owfs version %s" % DRIVER_VERSION)
             exit(1)
 
         # default to usb for the interface
@@ -662,13 +672,13 @@ if __name__ == '__main__':
             traverse(ow.Sensor('/'), display_sensor_info)
         elif options.reading:
             ow.init(iface)
-            print '%s: %s' % (options.reading, ow.get(options.reading))
+            print('%s: %s' % (options.reading, ow.get(options.reading)))
 
     def identify_sensor(s):
-        print '%s: %s %s' % (s.id, s._path, s._type)
+        print('%s: %s %s' % (s.id, s._path, s._type))
 
     def display_sensor_info(s):
-        print s.id
+        print("%s" % s.id)
         display_dict(s.__dict__)
 
     def display_dict(d, level=0):
@@ -678,14 +688,14 @@ if __name__ == '__main__':
             elif k == 'alias':
                 pass
             elif k.startswith('_'):
-                print '%s%s: %s' % ('  '*level, k, d[k])
+                print('%s%s: %s' % ('  '*level, k, d[k]))
             else:
                 v = 'UNKNOWN'
                 try:
                     v = ow.get(d[k])
-                except OWError, e:
+                except OWError as e:
                     v = 'FAIL: %s' % e
-                print '%s%s: %s' % ('  '*level, d[k], v)
+                print('%s%s: %s' % ('  '*level, d[k], v))
 
     def traverse(device, func):
         for s in device.sensors():

@@ -1,8 +1,7 @@
-# $Id: install.py 1699 2017-08-15 10:58:37Z mwall $
 # installer for OWFS
-# Copyright 2014 Matthew Wall
+# Copyright 2014-2020 Matthew Wall
 
-from setup import ExtensionInstaller
+from weecfg.extension import ExtensionInstaller
 
 def loader():
     return OWFSInstaller()
@@ -10,7 +9,7 @@ def loader():
 class OWFSInstaller(ExtensionInstaller):
     def __init__(self):
         super(OWFSInstaller, self).__init__(
-            version="0.21",
+            version="0.22",
             name='owfs',
             description='driver for one-wire devices connected via owfs',
             author="Matthew Wall",
