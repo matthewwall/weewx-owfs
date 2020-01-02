@@ -1,3 +1,6 @@
+0.30 02jan2020
+* port to Python 3 and weewx v4
+
 0.21 07aug2017
 * added closePort method to driver with call to ow.finish
 

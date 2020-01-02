@@ -162,7 +162,9 @@ Hobby-Boards with Inspeed wind instrument
 # FIXME: automatically detect each sensor type
 # FIXME: automatically detect per-sensor units
 
-import syslog
+from __future__ import absolute_import
+from __future__ import print_function
+
 import time
 
 import weewx
@@ -187,25 +189,25 @@ class OWFSBinding(object):
         import ow as owbinding
         try:
             owbinding.init(iface)
-        except owbinding.exError, e:
+        except owbinding.exError as e:
             raise OWError(e)
     def finish(self):
         import ow as owbinding
         try:
             owbinding.finish()
-        except owbinding.exError, e:
+        except owbinding.exError as e:
             raise OWError(e)
     def get(self, path):
         import ow as owbinding
         try:
             return owbinding.owfs_get(path)
-        except owbinding.exError, e:
+        except owbinding.exError as e:
             raise OWError(e)
     def put(self, path, value):
         import ow as owbinding
         try:
             owbinding.owfs_put(path, value)
-        except owbinding.exError, e:
+        except owbinding.exError as e:
             raise OWError(e)
 
 class OWNetBinding(object):
@@ -224,19 +226,19 @@ class OWNetBinding(object):
         import pyownet
         try:
             self.proxy = pyownet.protocol.proxy(host=host, port=port)
-        except pyownet.Error, e:
+        except pyownet.Error as e:
             raise OWError(e)
     def finish(self):
         self.proxy = None
     def get(self, path):
         try:
             return self.proxy.read(path)
-        except pyownet.Error, e:
+        except pyownet.Error as e:
             raise OWError(e)
     def put(self, path, value):
         try:
             self.proxy.write(path, value)
-        except pyownet.Error, e:
+        except pyownet.Error as e:
             raise OWError(e)
 
 try:
@@ -249,19 +251,46 @@ except ImportError:
 
 
 DRIVER_NAME = 'OWFS'
-DRIVER_VERSION = "0.21"
+DRIVER_VERSION = "0.30"
 
-def logmsg(level, msg):
-    syslog.syslog(level, 'owfs: %s' % msg)
+try:
+    # Test for new-style weewx logging by trying to import weeutil.logger
+    import weeutil.logger
+    import logging
 
-def logdbg(msg):
-    logmsg(syslog.LOG_DEBUG, msg)
+    log = logging.getLogger(__name__)
 
-def loginf(msg):
-    logmsg(syslog.LOG_INFO, msg)
 
-def logerr(msg):
-    logmsg(syslog.LOG_ERR, msg)
+    def logdbg(msg):
+        log.debug(msg)
+
+
+    def loginf(msg):
+        log.info(msg)
+
+
+    def logerr(msg):
+        log.error(msg)
+
+except ImportError:
+    # Old-style weewx logging
+    import syslog
+
+
+    def logmsg(level, msg):
+        syslog.syslog(level, 'nmea-xdr: %s:' % msg)
+
+
+    def logdbg(msg):
+        logmsg(syslog.LOG_DEBUG, msg)
+
+
+    def loginf(msg):
+        logmsg(syslog.LOG_INFO, msg)
+
+
+    def logerr(msg):
+        logmsg(syslog.LOG_ERR, msg)
 
 def get_float(path):
     sv = ow.get(path)
@@ -455,7 +484,7 @@ SENSOR_TYPES = {
 def loader(config_dict, engine):
     return OWFSDriver(**config_dict['OWFS'])
 
-class OWFSDriver(weewx.drivers.AbstractDevice):
+class OWFSDriver(AbstractDevice):
     """Driver for one-wire sensors via owfs."""
     
     def __init__(self, **stn_dict) :
@@ -493,7 +522,11 @@ class OWFSDriver(weewx.drivers.AbstractDevice):
         loginf('sensor type map is %s' % self.sensor_type)
         loginf('polling interval is %s' % str(self.polling_interval))
         loginf('sensor unit system is %s' % self.unit_system)
-        ow.init(self.interface)
+        try:
+            ow.init(self.interface)
+        except TypeError:
+            # For Python 3:
+            ow.init(self.interface.encode())
 
         # open all 1-wire channels on a Hobby Boards 4-channel hub.  see:
         #   http://owfs.org/index.php?page=4-channel-hub
@@ -518,7 +551,7 @@ class OWFSDriver(weewx.drivers.AbstractDevice):
                         func = SENSOR_TYPES[st]
                         p[s] = func(s, self.sensor_map[s],
                                     last_data, p['dateTime'])
-                    except (OWError, ValueError), e:
+                    except (OWError, ValueError) as e:
                         logerr("Failed to get sensor data for %s (%s): %s" %
                                (s, st, e))
                 else:
@@ -531,7 +564,7 @@ class OWFSDriver(weewx.drivers.AbstractDevice):
         ow.finish()
 
 
-class OWFSService(weewx.engine.StdService):
+class OWFSService(StdService):
     """Collect data from one-wire devices via owfs."""
 
     def __init__(self, engine, config_dict):
@@ -564,7 +597,11 @@ class OWFSService(weewx.engine.StdService):
         loginf('sensor type map is %s' % self.sensor_type)
         loginf('sensor unit system is %s' % self.unit_system)
 
-        ow.init(self.interface)
+        try:
+            ow.init(self.interface)
+        except TypeError:
+            # For Python 3:
+            ow.init(self.interface.encode())
         if self.binding == 'loop':
             self.bind(weewx.NEW_LOOP_PACKET, self.handle_new_loop)
         else:
@@ -601,7 +638,7 @@ class OWFSService(weewx.engine.StdService):
                 try:
                     p[s] = func(s, self.sensor_map[s],
                                 last_data, packet['dateTime'])
-                except (OWError, ValueError), e:
+                except (OWError, ValueError) as e:
                     logerr("Failed to get onewire data for %s (%s): %s" %
                            (s, st, e))
             else:
@@ -643,7 +680,7 @@ if __name__ == '__main__':
         (options, args) = parser.parse_args()
 
         if options.version:
-            print "owfs version %s" % DRIVER_VERSION
+            print("owfs version %s" % DRIVER_VERSION)
             exit(1)
 
         # default to usb for the interface
@@ -662,13 +699,13 @@ if __name__ == '__main__':
             traverse(ow.Sensor('/'), display_sensor_info)
         elif options.reading:
             ow.init(iface)
-            print '%s: %s' % (options.reading, ow.get(options.reading))
+            print('%s: %s' % (options.reading, ow.get(options.reading)))
 
     def identify_sensor(s):
-        print '%s: %s %s' % (s.id, s._path, s._type)
+        print('%s: %s %s' % (s.id, s._path, s._type))
 
     def display_sensor_info(s):
-        print s.id
+        print(s.id)
         display_dict(s.__dict__)
 
     def display_dict(d, level=0):
@@ -678,14 +715,14 @@ if __name__ == '__main__':
             elif k == 'alias':
                 pass
             elif k.startswith('_'):
-                print '%s%s: %s' % ('  '*level, k, d[k])
+                print('%s%s: %s' % ('  '*level, k, d[k]))
             else:
                 v = 'UNKNOWN'
                 try:
                     v = ow.get(d[k])
-                except OWError, e:
+                except OWError as e:
                     v = 'FAIL: %s' % e
-                print '%s%s: %s' % ('  '*level, d[k], v)
+                print('%s%s: %s' % ('  '*level, d[k], v))
 
     def traverse(device, func):
         for s in device.sensors():
