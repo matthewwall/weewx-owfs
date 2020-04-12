@@ -191,28 +191,18 @@ from weewx.drivers import AbstractDevice
 from weewx.engine import StdService
 
 DRIVER_NAME = 'OWFS'
-DRIVER_VERSION = "0.22"
+DRIVER_VERSION = "0.23"
 
 
 class OWError(Exception):
     pass
-
-class OWSensor(object):
-    def __init__(self):
-        self.id = None
-        self._type = None
-    def sensors(self):
-        return dict()
 
 class OWFSBinding(object):
     def __init__(self):
         import ow as owbinding
     def init(self, iface):
         import ow as owbinding
-        try:
-            owbinding.init(iface)
-        except TypeError:
-            owbinding.init(iface.encode())
+        owbinding.init(iface)
     def finish(self):
         import ow as owbinding
         try:
@@ -231,6 +221,10 @@ class OWFSBinding(object):
             owbinding.owfs_put(path, value)
         except owbinding.exError as e:
             raise OWError(e)
+    def Sensor(self, path):
+        import ow as owbinding
+        return owbinding.Sensor(path)
+
 
 class OWNetBinding(object):
     def __init__(self):
@@ -262,6 +256,9 @@ class OWNetBinding(object):
             self.proxy.write(path, value)
         except pyownet.Error as e:
             raise OWError(e)
+    def Sensor(self, path):
+        return self.proxy.Sensor(path)
+
 
 try:
     ow = OWFSBinding()
@@ -273,10 +270,7 @@ except ImportError:
 
 
 def get_float(path):
-    try:
-        sv = ow.get(path)
-    except TypeError:
-        sv = ow.get(path.encode())
+    sv = ow.get(path)
     sv = sv.replace(',','.')
     v = float(sv)
     return v

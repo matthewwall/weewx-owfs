@@ -1,3 +1,6 @@
+0.23 12mar2020
+* deal with python3/python2 string/bytes issues
+
 0.22 02jan2020
 * support for python3 and weewx4
 * support for ownet as well as owfs
