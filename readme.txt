@@ -1,3 +1,24 @@
+
+This fork contains a driver named owfs-dallas.py that is based on the
+original owfs.py. Once finished it's intended that it will be merged
+into this fork as owfs.py
+
+Its main difference with mwalls original owfs.py is that it includes a
+new function that provides windDir values for an original dallas weather
+station that used DS2406 and DS2401 sensors.
+
+There is also a separate function called rain_withpath and derived from
+rainwise_bucket. This deliberately removes the secondary path to the
+counter. That secondary path is expected to be supplied by the
+[[sensor_map]].
+
+The _main_ function that allows it to be run directly from a terminal
+is incomplete. It needs more work for the pyownet side to work as
+expected (for =readings).
+
+
+======
+
 owfs - weewx driver for one-wire devices via one-wire file system (OWFS)
 Copyright 2014-2020 Matthew Wall
 
