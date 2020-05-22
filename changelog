@@ -1,3 +1,12 @@
+0.23.6 22may2020
+* version number tweak to identify sub-fork
+* forked to include windDir function for  dallas weather station
+* additional function rain_withpath which moves the counter definition back to
+the sensor_map
+* add module string to version display in log file
+* work around get_float bytes issue with sv.replace(',','.')
+* attempt to modify _main_ section (still a W.I.P.)
+
 0.23 12mar2020
 * deal with python3/python2 string/bytes issues
 

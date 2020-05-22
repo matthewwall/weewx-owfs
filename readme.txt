@@ -7,14 +7,40 @@ Its main difference with mwalls original owfs.py is that it includes a
 new function that provides windDir values for an original dallas weather
 station that used DS2406 and DS2401 sensors.
 
-There is also a separate function called rain_withpath and derived from
-rainwise_bucket. This deliberately removes the secondary path to the
-counter. That secondary path is expected to be supplied by the
-[[sensor_map]].
+There is also a separate function called rain_withpath and that is
+derived from rainwise_bucket. This deliberately removes the secondary
+path to the counter. That secondary path is expected to be supplied by
+the [[sensor_map]].
 
-The _main_ function that allows it to be run directly from a terminal
-is incomplete. It needs more work for the pyownet side to work as
-expected (for =readings).
+The _main_ function that allows the script to be run directly from a
+terminal is incomplete. It needs more work for the pyownet side to work
+as expected (for =readings).
+
+N.B.
+
+The latest distributions appear to have dropped the python-ow package.
+pyownet is a drop in replacement for that module and this driver, and
+the original owfs.py will adjust themselves accordingly.
+
+With the change to pyownet, the owserver package becomes a new requirement
+
+sudo apt install owserver
+
+then configure the owserver by moving aside the contents of
+/etc/owfs.conf and creating a new file with the contents as
+follows, and uncommenting one of the first 3 device entries...
+
+/etc/owfs.conf
+
+#server: usb = all # for a DS9490
+#server: device = /dev/ttyS1 # for a serial port
+#server: device /dev/i2c-1 # for a pi using i2c-1
+server: port = 4304
+
+restart owserver...
+
+sudo /etc/init.d/owserver stop
+sudo /etc/init.d/owserver start
 
 
 ======
@@ -59,6 +85,7 @@ If using owfs as a service, add OWFSService to the list of services:
     [[Services]]
         data_services = user.owfs.OWFSService
 
-4) start weewx
+4) restart weewx
 
+sudo /etc/init.d/weewx stop
 sudo /etc/init.d/weewx start
