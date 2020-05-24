@@ -301,7 +301,7 @@ class OWFSBinding(object):
         import ow as owbinding
     def init(self, iface):
         import ow as owbinding
-        owbinding.init(iface)
+        owbinding.init(str(iface))
     def finish(self):
         import ow as owbinding
         try:
@@ -337,7 +337,7 @@ class OWNetBinding(object):
                 host, port = iface.split(':')
                 port = int(port)
             else:
-                host = iface
+                host = str(iface)
         import pyownet
         try:
             self.proxy = pyownet.protocol.proxy(host=host, port=port)
@@ -507,12 +507,12 @@ def inspeed_winddir(key, path, last_data, ts):
     return (400*(vad-0.05*vdd))/vdd if vdd else None
 
 def aag_windspeed(key, path, last_data, ts):
-    v = get_float(path+'/counters.A')
-    logdbg(" *** get_float(path+'/counters.A') = %s" % v)
+    #v = get_float(path+'/counters.A')
+    #logdbg(" *** get_float(path+'/counters.A') = %s" % v)
     ws = average(key, "%s%s" % (path, "/counters.A"), last_data, ts)
     if ws is not None:
         ws *= 3.948 / 2 # speed in mph is 2.453 * cnt / 2; convert to kph
-    logdbg(" *** sensor returned a windspeed result of %s" % ws)
+    #logdbg(" *** sensor returned a windspeed result of %s" % ws)
     return ws
 
 def aag_winddir(key, path, last_data, ts):
@@ -827,9 +827,10 @@ class OWFSDriver(AbstractDevice):
                 # when the bus master turns on the DS2407 output, connecting
                 # one side of all the DS2401s to the 1-Wire bus ground line.
                     func = SENSOR_TYPES[st]
+                    #loginf("map of type %s " % type(self.sensor_map[s]))
                     if st == "dallas_windvane":
                         try:
-                            p[s] = func(s, self.sensor_map[s],
+                            p[s] = func(s, str(self.sensor_map[s]),
                                         last_data, p['dateTime'], **self.sensor_dir)
                         except (OWError, ValueError) as e:
                             logerr("Failed to get Dallas sensor data for %s (%s): %s" %
@@ -837,7 +838,7 @@ class OWFSDriver(AbstractDevice):
                         continue
                     else:
                         try:
-                            p[s] = func(s, self.sensor_map[s],
+                            p[s] = func(s, str(self.sensor_map[s]),
                                         last_data, p['dateTime'])
                         except (OWError, ValueError) as e:
                             logerr("Failed to get sensor data for %s (%s): %s" %
@@ -930,7 +931,7 @@ class OWFSService(StdService):
                 func = SENSOR_TYPES[st]
                 if st == "dallas_windvane":
                     try:
-                        p[s] = func(s, self.sensor_map[s],
+                        p[s] = func(s, str(self.sensor_map[s]),
                                     last_data, packet['dateTime'], **self.sensor_dir)
                     except (OWError, ValueError) as e:
                         logerr("Failed to get Dallas sensor data for %s (%s): %s" %
@@ -938,7 +939,7 @@ class OWFSService(StdService):
                     continue
                 else:
                     try:
-                        p[s] = func(s, self.sensor_map[s],
+                        p[s] = func(s, str(self.sensor_map[s]),
                                     last_data, packet['dateTime'])
                     except (OWError, ValueError) as e:
                         logerr("Failed to get onewire data for %s (%s): %s" %
