@@ -1,3 +1,7 @@
+0.23.6 24may2020
+* add str() to work around unicode issue with python2.7
+* https://groups.google.com/d/msg/weewx-user/FqGbLbH0Gcs/3hQDcHs8AwAJ
+
 0.23.6 22may2020
 * version number tweak to identify sub-fork
 * forked to include windDir function for  dallas weather station
