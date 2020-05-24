@@ -202,7 +202,7 @@ class OWFSBinding(object):
         import ow as owbinding
     def init(self, iface):
         import ow as owbinding
-        owbinding.init(iface)
+        owbinding.init(str(iface))
     def finish(self):
         import ow as owbinding
         try:
@@ -238,7 +238,7 @@ class OWNetBinding(object):
                 host, port = iface.split(':')
                 port = int(port)
             else:
-                host = iface
+                host = str(iface)
         import pyownet
         try:
             self.proxy = pyownet.protocol.proxy(host=host, port=port)
@@ -247,12 +247,16 @@ class OWNetBinding(object):
     def finish(self):
         self.proxy = None
     def get(self, path):
+        import pyownet
         try:
             return self.proxy.read(path)
         except pyownet.Error as e:
             raise OWError(e)
     def put(self, path, value):
+        import pyownet
         try:
+            # from pyownet.protocol.str2bytez
+            value = value.encode('ascii') + b'\x00'
             self.proxy.write(path, value)
         except pyownet.Error as e:
             raise OWError(e)
@@ -262,16 +266,22 @@ class OWNetBinding(object):
 
 try:
     ow = OWFSBinding()
+    DRIVER_VERSION = DRIVER_VERSION+" (ow)"
 except ImportError:
     try:
         ow = OWNetBinding()
+        DRIVER_VERSION = DRIVER_VERSION+" (pyownet)"
     except ImportError:
         raise Exception("No one-wire library found")
 
 
 def get_float(path):
     sv = ow.get(path)
-    sv = sv.replace(',','.')
+    try:
+        sv = sv.replace(',','.')
+    except:
+        # required for pyownet and weewx4
+        sv = sv.replace(b',',b'.')
     v = float(sv)
     return v
 
@@ -464,7 +474,7 @@ def loader(config_dict, engine):
 class OWFSDriver(AbstractDevice):
     """Driver for one-wire sensors via owfs."""
 
-    def __init__(self, **stn_dict) :
+    def __init__(self, **stn_dict):
         """Initialize the driver.
 
         interface: Where to find the one-wire sensors.  Options include
@@ -523,7 +533,7 @@ class OWFSDriver(AbstractDevice):
                 if st in SENSOR_TYPES:
                     try:
                         func = SENSOR_TYPES[st]
-                        p[s] = func(s, self.sensor_map[s],
+                        p[s] = func(s, str(self.sensor_map[s]),
                                     last_data, p['dateTime'])
                     except (OWError, ValueError) as e:
                         logerr("Failed to get sensor data for %s (%s): %s" %
@@ -607,7 +617,7 @@ class OWFSService(StdService):
             if st in SENSOR_TYPES:
                 func = SENSOR_TYPES[st]
                 try:
-                    p[s] = func(s, self.sensor_map[s],
+                    p[s] = func(s, str(self.sensor_map[s]),
                                 last_data, packet['dateTime'])
                 except (OWError, ValueError) as e:
                     logerr("Failed to get onewire data for %s (%s): %s" %
