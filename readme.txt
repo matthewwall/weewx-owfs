@@ -16,6 +16,47 @@ The _main_ function that allows the script to be run directly from a
 terminal is incomplete. It needs more work for the pyownet side to work
 as expected (for =readings).
 
+============
+N.B.
+Running owserver under systemd. (This aplies to the majority of recent
+linux distributions.)
+
+A problem that has been occuring with owserver on Debian Buster installs
+is a refusal to start and run. There's no rhyme or reason to it, and it
+magically fixes itself.
+
+The following post describes a possible fix for that problem.
+
+https://sourceforge.net/p/owfs/mailman/message/36765345/
+part of...
+https://sourceforge.net/p/owfs/mailman/owfs-developers/?viewmonth=201909
+
+In summary, and quoting an extract from the above post ...
+
+"/etc/systemd/system/owserver.service.d/override.conf is an override
+file, that you create with"
+sudo systemctl edit owserver.service
+
+and include the following content...
+
+# /etc/systemd/system/owserver.service.d/override.conf
+[Service]
+User=Debian-ow
+Group=Debian-ow
+ExecStart=
+ExecStart=/usr/bin/owserver -c /etc/owfs.conf --foreground
+
+[Install]
+Also=
+
+
+This disables the use of sockets for owserver, and brings the daemon to
+the foreground.
+
+
+
+===========
+
 N.B.
 
 The latest distributions appear to have dropped the python-ow package.
