@@ -37,7 +37,7 @@ In summary, and quoting an extract from the above post ...
 file, that you create with"
 sudo systemctl edit owserver.service
 
-and include the following content...
+then add the following content...
 
 # /etc/systemd/system/owserver.service.d/override.conf
 [Service]
@@ -53,11 +53,9 @@ Also=
 This disables the use of sockets for owserver, and brings the daemon to
 the foreground.
 
-
-
 ===========
 
-N.B.
+And another N.B.
 
 The latest distributions appear to have dropped the python-ow package.
 pyownet is a drop in replacement for that module and this driver, and
