@@ -270,7 +270,7 @@ except ImportError:
     # old-style weewx logging
     import syslog
     def logmsg(level, msg):
-        syslog.syslog(level, 'owfs: %s' % msg)
+        syslog.syslog(level, 'owfs-dallas: %s' % msg)
     def logdbg(msg):
         logmsg(syslog.LOG_DEBUG, msg)
     def loginf(msg):
@@ -299,8 +299,12 @@ class OWSensor(object):
 class OWFSBinding(object):
     def __init__(self):
         import ow as owbinding
-    def init(self, iface):
+
+    def init(self, iface=None):
         import ow as owbinding
+        if iface is None:
+            iface = 'u'
+        loginf('ow interface set as %s' % iface)
         owbinding.init(str(iface))
     def finish(self):
         import ow as owbinding
@@ -329,6 +333,7 @@ class OWNetBinding(object):
     def __init__(self):
         import pyownet
         self.proxy = None
+
     def init(self, iface=None):
         host = 'localhost'
         port = 4304
@@ -338,32 +343,37 @@ class OWNetBinding(object):
                 port = int(port)
             else:
                 host = str(iface)
+        loginf('pyownet interface set as %s:%s' % (host, port))
         import pyownet
         try:
             self.proxy = pyownet.protocol.proxy(host=host, port=port)
         except pyownet.Error as e:
             raise OWError(e)
+
     def finish(self):
         self.proxy = None
+
     def get(self, path):
         import pyownet
         try:
             return self.proxy.read(path)
         except pyownet.Error as e:
             raise OWError(e)
+
     def put(self, path, value):
         import pyownet
         try:
-            print (path, value)
+            # print (path, value)
             # from pyownet.protocol.str2bytez
             value = value.encode('ascii') + b'\x00'
             self.proxy.write(path, value)
         except pyownet.Error as e:
             raise OWError(e)
-    def dir(self, path):
+
+    def Sensor(self, path):
         import pyownet
         try:
-            print(path)
+            # print(path)
             return self.proxy.dir(path)
         except pyownet.Error as e:
             raise OWError(e)
@@ -382,7 +392,7 @@ except ImportError:
 def get_float(path):
     sv = ow.get(path)
     try:
-        sv = sv.replace(',','.')
+        sv = sv.replace(',', '.')
     except:
         # required for pyownet and weewx4
         sv = sv.replace(b',',b'.')
@@ -507,12 +517,12 @@ def inspeed_winddir(key, path, last_data, ts):
     return (400*(vad-0.05*vdd))/vdd if vdd else None
 
 def aag_windspeed(key, path, last_data, ts):
-    #v = get_float(path+'/counters.A')
-    #logdbg(" *** get_float(path+'/counters.A') = %s" % v)
+    # v = get_float(path+'/counters.A')
+    # logdbg(" *** get_float(path+'/counters.A') = %s" % v)
     ws = average(key, "%s%s" % (path, "/counters.A"), last_data, ts)
     if ws is not None:
         ws *= 3.948 / 2 # speed in mph is 2.453 * cnt / 2; convert to kph
-    #logdbg(" *** sensor returned a windspeed result of %s" % ws)
+    # logdbg(" *** sensor returned a windspeed result of %s" % ws)
     return ws
 
 def aag_winddir(key, path, last_data, ts):
@@ -635,21 +645,21 @@ def dallas_winddir(key, path, last_data, ts, **kwargs):
     Make a note of where North points on your unit. It's arbitary but once
     you're up the ladder, you'll want to know it!
     """
-    #"""
-    ## test for DS2406 presence and switch values
-    #path = '/12.5EAB0D000001'
-    Ra = '/12.92400E000000/PIO.A'
-    Rb = '/12.92400E000000/PIO.B'
-    Wa = path+'/PIO.A'
-    Wb = path+'/PIO.B'
-    try:
-        logdbg("%s : A- %s B- %s" % (Ra, int(ow.get(Ra)), int(ow.get(Rb))))
-    except:
-        logdbg("DS2406 %s is being troublesome" % Ra)
-    try:
-        logdbg("%s : A- %s B- %s" % (path, int(ow.get(Wa)), int(ow.get(Wb))))
-    except:
-        logdbg("DS2406 %s is being troublesome" % Wa)
+    # """
+    # # manual test for DS2406 presence and switch values
+    # path = '/12.5EAB0D000001'
+    # Ra = '/12.92400E000000/PIO.A'
+    # Rb = '/12.92400E000000/PIO.B'
+    # Wa = path+'/PIO.A'
+    # Wb = path+'/PIO.B'
+    # try:
+    #    logdbg("%s : A- %s B- %s" % (Ra, int(ow.get(Ra)), int(ow.get(Rb))))
+    # except:
+    #    logdbg("DS2406 %s is being troublesome" % Ra)
+    # try:
+    #    logdbg("%s : A- %s B- %s" % (path, int(ow.get(Wa)), int(ow.get(Wb))))
+    # except:
+    #    logdbg("DS2406 %s is being troublesome" % Wa)
 
     f_sns = []
     # test if the controlling DS2406 is available
@@ -669,7 +679,7 @@ def dallas_winddir(key, path, last_data, ts, **kwargs):
             pass
     except OWError as e:
         logdbg("Missing DS2406 %s err %s" % (path, e))
-        #pass
+        # pass
         # The controlling sensor is missing, but the DS2401's
         # may still be visible so we'll roll on through.
     except Exception:
@@ -684,9 +694,9 @@ def dallas_winddir(key, path, last_data, ts, **kwargs):
                 ow.get("%s%s%s" % ("/uncached", x, "/address"))
                 f_sns.append(x)
                 logdbg("Found DS2401 %s" % x)
-                #logdbg("Found DS2401 %s" % type(x))
+                # logdbg("Found DS2401 %s" % type(x))
             except OWError as e:
-                #logdbg("DS2401 %s not found %s" % (x, e))
+                # logdbg("DS2401 %s not found %s" % (x, e))
                 pass
     except:
         raise
@@ -703,18 +713,18 @@ def dallas_winddir(key, path, last_data, ts, **kwargs):
         logdbg("DS2406 switched off? : %s" % (s_tate))
     except Exception as e:
         pass
-        #logdbg("Still missing the DS2406 %s : %s" % (path, e))
+        # logdbg("Still missing the DS2406 %s : %s" % (path, e))
 
-    #logdbg("f_sns[0] is %s" % f_sns[0])
+    # logdbg("f_sns[0] is %s" % f_sns[0])
     if f_sns[0] is not None:
         pth1 = str(f_sns[0])
         pth2 = str(f_sns[1])
         logdbg(" *** NEW list %s" % f_sns)
-        ##logdbg(" NEW pth1 =  %s, pth2 = %s" % (f_sns[0], f_sns[1]))
+        ## logdbg(" NEW pth1 =  %s, pth2 = %s" % (f_sns[0], f_sns[1]))
         # The f_sns[0] primary key direction, or None
         p_deg = kwargs[pth1]
         # we may have a secondary key, check and record
-        #logdbg("p_deg is %s" % p_deg)
+        # logdbg("p_deg is %s" % p_deg)
         if f_sns[1] is not None:
             s_deg = kwargs[pth2]
             if s_deg == '45' and p_deg == '360':
@@ -725,7 +735,7 @@ def dallas_winddir(key, path, last_data, ts, **kwargs):
             wdir = float(p_deg)
 
         logdbg(" *** NEW --> %s <-- wdir degrees ... derived from %s and %s" % (wdir, p_deg, s_deg))
-        #logdbg("")
+        # logdbg("")
     else:
         logdbg("No DS2401 sensors were detected")
         wdir = None
@@ -779,14 +789,14 @@ class OWFSDriver(AbstractDevice):
         self.sensor_map = stn_dict['sensor_map']
         self.sensor_type = stn_dict.get('sensor_type', {})
         self.sensor_dir = stn_dict.get('sensor_direction', {})
-        self.interface = stn_dict.get('interface', 'u')
+        self.interface = stn_dict.get('interface', None)
         self.polling_interval = int(stn_dict.get('polling_interval', 20))
         self.unit_system = stn_dict.get('unit_system', 'METRIC').lower()
         self.last_data = {}
         self.units = weewx.US if self.unit_system == 'us' else weewx.METRIC
 
         loginf('driver version is %s' % DRIVER_VERSION)
-        loginf('interface is %s' % self.interface)
+        loginf('interface starts as %s' % self.interface)
         loginf('sensor map is %s' % self.sensor_map)
         loginf('sensor type map is %s' % self.sensor_type)
         loginf('dallas direction map is %s' % self.sensor_dir)
@@ -806,7 +816,7 @@ class OWFSDriver(AbstractDevice):
     def genLoopPackets(self):
         while True:
             last_data = dict(self.last_data)
-            #loginf("lastdata = %s", last_data)
+            # loginf("lastdata = %s", last_data)
             p = {'usUnits': self.units,
                  'dateTime': int(time.time() + 0.5)}
             for s in self.sensor_map:
@@ -827,7 +837,7 @@ class OWFSDriver(AbstractDevice):
                 # when the bus master turns on the DS2407 output, connecting
                 # one side of all the DS2401s to the 1-Wire bus ground line.
                     func = SENSOR_TYPES[st]
-                    #loginf("map of type %s " % type(self.sensor_map[s]))
+                    # loginf("map of type %s " % type(self.sensor_map[s]))
                     if st == "dallas_windvane":
                         try:
                             p[s] = func(s, str(self.sensor_map[s]),
@@ -850,9 +860,9 @@ class OWFSDriver(AbstractDevice):
             yield p # polling interval skips a beat if left here.
             _l = time.time()
             time.sleep(self.polling_interval)
-            #yield p # seems more stable, no >4 second cycles
+            # yield p # seems more stable, no >4 second cycles
             _m = time.time()
-            #logdbg("           polling every %s secs, yield 1 %s, after 1 %s, total %s TIME" % (self.polling_interval,int(_p-_l),_l,int(_p-_m)))
+            # logdbg("           polling every %s secs, yield 1 %s, after 1 %s, total %s TIME" % (self.polling_interval,int(_p-_l),_l,int(_p-_m)))
 
     def closePort(self):
         ow.finish()
@@ -879,7 +889,7 @@ class OWFSService(StdService):
         self.sensor_map = d['sensor_map']
         self.sensor_type = d.get('sensor_type', {})
         self.sensor_dir = d.get('sensor_direction', {})
-        self.interface = d.get('interface', 'u')
+        self.interface = d.get('interface', None)
         self.unit_system = d.get('unit_system', 'METRIC').lower()
         self.binding = d.get('binding', 'archive')
         self.last_data = {}
@@ -887,7 +897,7 @@ class OWFSService(StdService):
 
         loginf('service version is %s' % DRIVER_VERSION)
         loginf('binding is %s' % self.binding)
-        loginf('interface is %s' % self.interface)
+        loginf('interface starts as %s' % self.interface)
         loginf('sensor map is %s' % self.sensor_map)
         loginf('sensor type map is %s' % self.sensor_type)
         loginf('dallas direction map is %s' % self.sensor_dir)
@@ -991,6 +1001,7 @@ if __name__ == '__main__':
             exit(1)
 
         try:
+            import arfle
             # python-ow
             ow = OWFSBinding()
             print("module ow")
@@ -1066,8 +1077,10 @@ if __name__ == '__main__':
 
                 def read_paths(more):
                     chnl = '1'
-                    for pth in ow.dir('/'):
+                    for pth in ow.Sensor('/'):
                         sensor_type = pth+'type'
+                        #print("sensor type root %s" % bytes.decode(ow.get(sensor_type)))
+                        b_type = bytes.decode(ow.get(sensor_type))
                         hub_main = pth+'main'
                         hub_aux = pth+'aux'
                         try:
@@ -1076,22 +1089,24 @@ if __name__ == '__main__':
                             print('exception %s' % e)
                         if sensor_type == 'DS2409':
                             print('channel %s --main' % chnl)
-                            nest_path = ow.dir(hub_main)
+                            nest_path = ow.Sensor(hub_main)
                             id_sensor(nest_path, more)
                             print('           --aux')
-                            nest_path = ow.dir(hub_aux)
+                            nest_path = ow.Sensor(hub_aux)
                             id_sensor(nest_path, more)
                             chnl = int(chnl)+1
                         elif sensor_type == 'DS1420':
-                            print("sensor type %s located at %s" % (sensor_type, pth))
-                        elif chnl == '1':
-                            #nest_path = ow.dir('/')
-                            #id_sensor(ow.dir('/'), more)
-                            read_sensors('/')
-                            print("pyownet sensor type %s located at %s" % (sensor_type, pth))
-                            #print("%s at %s" % (sensor_type, pth))
+                            print("sensor type: %s located at %s" % (sensor_type, pth))
+                        #elif not more:
+                        #    nest_path = ow.Sensor('/')
+                        #    id_sensor(nest_path, more)
+                        elif sensor_type:
+                            more = False
+                            nest_path = ow.Sensor('/')
+                            print('sensor type: %s located at: %s' % (b_type, pth))
+                            read_sensors(pth, b_type)
                             chnl = int(chnl)+1
-                        print("")
+                            #print("channel is %s" % chnl)
 
                 def id_sensor(nest_path, more):
                     for tt in nest_path:
@@ -1105,65 +1120,16 @@ if __name__ == '__main__':
                         if more:
                             read_sensors(tt, sensor_type)
 
-                #def read_sensors(nest_path, sensor_type):
 
-                def read_sensors(dd, level=0):
-                    v=None
-                    d = ow.dir('/')
-                    print(" d is %s" % (d))
-                    for kk in d:
-                        print(" kk is %s" % (kk))
-                        for k in ow.dir(kk):
-                            #print(" k is %s" % (k))
-                            try:
-                                #kk =  bytes.decode(ow.get(k))
-                                #print("%s :: %s" % (k, kk))
-                                print("%s :: %s" % (k, bytes.decode(ow.get(k))))
-                            except OWError:
-                                #print("is a directory")
-                                pass
-                            except UnicodeDecodeError:
-                                print(" unicode error")
-                                pass
-                                #continue
-                            #print(" k is %s and d is %s" % (k, d))
-                            #if isinstance(d[k], dict):
-                            #    display_dict(d[k], level=level+1)
-                            if k == 'alias':
-                                pass
-                            #elif k.startswith('_'):
-                            #    print('%s%s: %s' % ('  '*level, k, d[k]))
-                            else:
-                                #kk =  bytes.decode(ow.get(k))
-                                #print("%s :: %s" % (k, kk))
-                                pass
-                            """
-                            #except OWError:
-                            #    print("is a directory")
-                            #    pass
-                            #print("%s :: %s" % (k, kk))
-                            v = 'UNKNOWN'
-                            try:
-                                v = ow.get(d[k])
-                            except OWError as e:
-                                v = 'FAIL: %s' % e
-                            try:
-                                print('%s%s: %s' % ('  '*level, d[k], v))
-                            except UnicodeEncodeError as e:
-                                print(e)
-                        #print(" " % bytes.decode(ow.get(nest_path+'.*')))
-                            """
-
-
-                def ead_sensors(nest_path, sensor_type):
+                def read_sensors(nest_path, sensor_type):
                     if sensor_type == 'DS18S20':
                         temp = nest_path+'temperature'
-                        print(" temperature\t%s" % bytes.decode(ow.get(temp)))
+                        print(" temperature\t%s\n" % bytes.decode(ow.get(temp)))
                     elif sensor_type == 'DS2423':
                         countA = nest_path+'counters.A'
                         countB = nest_path+'counters.B'
                         countALL = nest_path+'counters.ALL'
-                        print(" Counters A\t%s\n Counters B\t%s\n Counters ALL\t%s" %
+                        print(" Counters A\t%s\n Counters B\t%s\n Counters ALL\t%s\n" %
                               (bytes.decode(ow.get(countA)),bytes.decode(ow.get(countB)),
                                bytes.decode(ow.get(countALL))))
                     elif sensor_type == 'DS2438':
@@ -1176,18 +1142,34 @@ if __name__ == '__main__':
                         print(" VAD \t\t%s\n VDD \t\t%s\n temperature\t%s" %
                               (bytes.decode(ow.get(vad)), bytes.decode(ow.get(vdd)),
                                bytes.decode(ow.get(temp))))
-                        print(" humidity\t%s \n pressure\t%s\n illuminance\t%s" %
+                        print(" humidity\t%s\n pressure\t%s\n illuminance\t%s\n" %
                               (bytes.decode(ow.get(hum)),bytes.decode(ow.get(pres)),
                                bytes.decode(ow.get(illum))))
+                    elif sensor_type == 'DS2450':
+                        vall = nest_path+'volt.ALL'
+                        vall2 = nest_path+'volt2.ALL'
+                        latestvall = nest_path+'latestvolt.ALL'
+                        latestvall2 = nest_path+'latestvolt2.ALL'
+                        PIOall = nest_path+'PIO.ALL'
+                        print(" volt.ALL\t%s\n volt2.ALL\t%s" %
+                              (bytes.decode(ow.get(vall)),
+                               bytes.decode(ow.get(vall2))))
+                        print(" latestvolt.ALL \t%s\n latestvolt2.ALL\t%s" %
+                              (bytes.decode(ow.get(latestvall)),
+                               bytes.decode(ow.get(latestvall2))))
+                        print(" PIO.ALL\t%s\n" % bytes.decode(ow.get(PIOall)))
+                    else:
+                        print("xx %s" % ow.Sensor(nest_path))
 
                 if options.sensors:
                     ow.init(iface)
-                    read_paths(more=False)
+                    nest_path = ow.Sensor('/')
+                    id_sensor(nest_path, more=False)
                 elif options.dallas:
                     ow.init(iface)
-                    # if using a dallas staion, or there are DS2406 chips, these
-                    # may need to be turned on by supplying the address of the
-                    # controlling DS2406
+                    # if using a dallas station, or there are DS2406 chips,
+                    # these may need to be turned on by supplying the address
+                    # of the controlling DS2406
                     try:
                         ow.put(("/%s%s" % (options.dallas, "/PIO.B")), '1') # on
                         print(ow.get("/%s%s" % (options.dallas, "/PIO.B")))
@@ -1199,7 +1181,8 @@ if __name__ == '__main__':
                     read_paths(more=True)
                 elif options.reading:
                     ow.init(iface)
-                    print ("reading for this sensor -> %s" % bytes.decode(ow.get(options.reading)))
+                    print("reading for this sensor -> %s" %
+                           bytes.decode(ow.get(options.reading)))
 
             except ImportError:
                 raise Exception("No one-wire library found")
