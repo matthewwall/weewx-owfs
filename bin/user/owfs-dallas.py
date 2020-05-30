@@ -2,6 +2,7 @@
 # Copyright 2013-2020 Matthew Wall
 # Thanks to Mark Cressey (onewireweewx) and Howard Walter (TAI code).
 # The Dallas windvane added by Glenn McKechnie.
+# also pyownet in _main_ section
 # https://github.com/glennmckechnie/weewx-owfs
 #
 # This program is free software: you can redistribute it and/or modify it under
@@ -260,21 +261,29 @@ try:
     import weeutil.logger
     import logging
     log = logging.getLogger(__name__)
+
     def logdbg(msg):
         log.debug(msg)
+
     def loginf(msg):
         log.info(msg)
+
     def logerr(msg):
         log.error(msg)
+
 except ImportError:
     # old-style weewx logging
     import syslog
+
     def logmsg(level, msg):
         syslog.syslog(level, 'owfs-dallas: %s' % msg)
+
     def logdbg(msg):
         logmsg(syslog.LOG_DEBUG, msg)
+
     def loginf(msg):
         logmsg(syslog.LOG_INFO, msg)
+
     def logerr(msg):
         logmsg(syslog.LOG_ERR, msg)
 
@@ -289,12 +298,6 @@ DRIVER_VERSION = "0.23.6"
 class OWError(Exception):
     pass
 
-class OWSensor(object):
-    def __init__(self):
-        self.id = None
-        self._type = None
-    def sensors(self):
-        return dict()
 
 class OWFSBinding(object):
     def __init__(self):
@@ -306,24 +309,28 @@ class OWFSBinding(object):
             iface = 'u'
         loginf('ow interface set as %s' % iface)
         owbinding.init(str(iface))
+
     def finish(self):
         import ow as owbinding
         try:
             owbinding.finish()
         except owbinding.exError as e:
             raise OWError(e)
+
     def get(self, path):
         import ow as owbinding
         try:
             return owbinding.owfs_get(path)
         except owbinding.exError as e:
             raise OWError(e)
+
     def put(self, path, value):
         import ow as owbinding
         try:
             owbinding.owfs_put(path, value)
         except owbinding.exError as e:
             raise OWError(e)
+
     def Sensor(self, path):
         import ow as owbinding
         return owbinding.Sensor(path)
@@ -443,7 +450,7 @@ def average(key, path, last_data, ts):
 def rainwise_bucket(key, path, last_data, ts):
     cnt = counter(key, "%s%s" % (path, "/counters.B"), last_data, ts)
     if cnt is not None:
-        cnt *= 0.0254 # rainwise bucket is 0.01 inches per tip, convert to cm
+        cnt *= 0.0254  # rainwise bucket is 0.01 inches per tip, convert to cm
     return cnt
 
 def rain_withpath(key, path, last_data, ts):
@@ -451,7 +458,7 @@ def rain_withpath(key, path, last_data, ts):
     # in the weewx.conf file [OWFS][[sensor_map]] section
     cnt = counter(key, path, last_data, ts)
     try:
-        cnt *= 0.0254 # for 0.01 inches per tip, convert to cm
+        cnt *= 0.0254  # for 0.01 inches per tip, convert to cm
     except:
         cnt = None
     return cnt
@@ -459,7 +466,7 @@ def rain_withpath(key, path, last_data, ts):
 def ads_windspeed(key, path, last_data, ts):
     ws = average(key, "%s%s" % (path, "/counters.A"), last_data, ts)
     if ws is not None:
-        ws *= 2.01168 # convert to kph
+        ws *= 2.01168  # convert to kph
     return ws
 
 def ads_winddir(key, path, last_data, ts):
@@ -505,7 +512,7 @@ def ads_winddir(key, path, last_data, ts):
 def inspeed_windspeed(key, path, last_data, ts):
     ws = average(key, "%s%s" % (path, "/counters.A"), last_data, ts)
     if ws is not None:
-        ws *= 4.02336 # convert to kph
+        ws *= 4.02336  # convert to kph
     return ws
 
 def inspeed_winddir(key, path, last_data, ts):
@@ -673,13 +680,10 @@ def dallas_winddir(key, path, last_data, ts, **kwargs):
                 logdbg("DS2406 switched on ? : %s" % (s_tate))
             except Exception as e:
                 logdbg("Failed to turn on DS2406: %s get %s" % (path, s_tate))
-                pass
         except (OWError, ValueError) as e:
             logdbg("pyownet error ?")
-            pass
     except OWError as e:
         logdbg("Missing DS2406 %s err %s" % (path, e))
-        # pass
         # The controlling sensor is missing, but the DS2401's
         # may still be visible so we'll roll on through.
     except Exception:
@@ -715,7 +719,6 @@ def dallas_winddir(key, path, last_data, ts, **kwargs):
         pass
         # logdbg("Still missing the DS2406 %s : %s" % (path, e))
 
-    # logdbg("f_sns[0] is %s" % f_sns[0])
     if f_sns[0] is not None:
         pth1 = str(f_sns[0])
         pth2 = str(f_sns[1])
@@ -735,7 +738,6 @@ def dallas_winddir(key, path, last_data, ts, **kwargs):
             wdir = float(p_deg)
 
         logdbg(" *** NEW --> %s <-- wdir degrees ... derived from %s and %s" % (wdir, p_deg, s_deg))
-        # logdbg("")
     else:
         logdbg("No DS2401 sensors were detected")
         wdir = None
@@ -824,7 +826,6 @@ class OWFSDriver(AbstractDevice):
                 st = 'gauge'
                 if s in self.sensor_type:
                     st = self.sensor_type[s]
-                if st in SENSOR_TYPES:
                 # https://www.element14.com/community/groups/ \
                 # internet-of-things/blog/2015/01/07/old-meets-new- \
                 # the-1-wire-weather-station-on-the-spark-core-part-5
@@ -836,12 +837,14 @@ class OWFSDriver(AbstractDevice):
                 # Communication with the wind direction sensor therefore begins
                 # when the bus master turns on the DS2407 output, connecting
                 # one side of all the DS2401s to the 1-Wire bus ground line.
+                if st in SENSOR_TYPES:
                     func = SENSOR_TYPES[st]
                     # loginf("map of type %s " % type(self.sensor_map[s]))
                     if st == "dallas_windvane":
                         try:
                             p[s] = func(s, str(self.sensor_map[s]),
-                                        last_data, p['dateTime'], **self.sensor_dir)
+                                        last_data, p['dateTime'],
+                                        **self.sensor_dir)
                         except (OWError, ValueError) as e:
                             logerr("Failed to get Dallas sensor data for %s (%s): %s" %
                                    (s, st, e))
@@ -942,7 +945,8 @@ class OWFSService(StdService):
                 if st == "dallas_windvane":
                     try:
                         p[s] = func(s, str(self.sensor_map[s]),
-                                    last_data, packet['dateTime'], **self.sensor_dir)
+                                    last_data, packet['dateTime'],
+                                    **self.sensor_dir)
                     except (OWError, ValueError) as e:
                         logerr("Failed to get Dallas sensor data for %s (%s): %s" %
                                (s, st, e))
@@ -988,33 +992,37 @@ if __name__ == '__main__':
                           help='display list attached sensors')
         parser.add_option('--readings', dest='readings', action='store_true',
                           help='display sensor readings')
-        parser.add_option('--reading',dest='reading',type=str,metavar="SENSOR",
+        parser.add_option('--pyownet_readings', dest='pyownet_readings',
+                          action='store_true',
+                          help='display sensor readings via pyownet')
+        parser.add_option('--reading', dest='reading', type=str,
+                          metavar="SENSOR",
                           help='display output of specified sensor')
-        parser.add_option('--dallas',dest='dallas',type=str,metavar="12.X...X",
+        parser.add_option('--dallas', dest='dallas',
+                          type=str, metavar="12.X...X",
                           help='display DS2401 sensor/s that are visible. A \
                           DS2406 address must be supplied.')
         (options, args) = parser.parse_args()
-
 
         if options.version:
             print("owfs version %s" % DRIVER_VERSION)
             exit(1)
 
         try:
-            import arfle
             # python-ow
             ow = OWFSBinding()
-            print("module ow")
+            print("Using module ow")
 
             def identify_sensor(s):
                 print('id %s: path %s s._type %s' % (s.id, s._path, s._type))
 
             def display_sensor_info(s):
                 print(s.id)
+                print("display_sensor_info is %s" % s)
                 display_dict(s.__dict__)
 
             def display_dict(d, level=0):
-                v=None
+                v = None
                 for k in d:
                     if isinstance(d[k], dict):
                         display_dict(d[k], level=level+1)
@@ -1054,7 +1062,7 @@ if __name__ == '__main__':
                 # may need to be turned on by supplying the address of the
                 # controlling DS2406
                 try:
-                    ow.put(("/%s%s" % (options.dallas, "/PIO.B")), '1') # on
+                    ow.put(("/%s%s" % (options.dallas, "/PIO.B")), '1')  # on
                     print(ow.get("/%s%s" % (options.dallas, "/PIO.B")))
                 except Exception as e:
                     print("ow.put returned an error: %s" % e)
@@ -1062,15 +1070,18 @@ if __name__ == '__main__':
             elif options.readings:
                 ow.init(iface)
                 traverse(ow.Sensor('/'), display_sensor_info)
+            elif options.pyownet_readings:
+                print('Not available via python-ow module')
             elif options.reading:
                 ow.init(iface)
                 print('%s: %s' % (options.reading, ow.get(options.reading)))
+            print("\nUsing module ow")
 
         except ImportError:
             try:
                 # pyownet
                 ow = OWNetBinding()
-                print("module pyownet")
+                print("Using module pyownet")
 
                 import pyownet
                 iface = "localhost:4304"
@@ -1079,7 +1090,6 @@ if __name__ == '__main__':
                     chnl = '1'
                     for pth in ow.Sensor('/'):
                         sensor_type = pth+'type'
-                        #print("sensor type root %s" % bytes.decode(ow.get(sensor_type)))
                         b_type = bytes.decode(ow.get(sensor_type))
                         hub_main = pth+'main'
                         hub_aux = pth+'aux'
@@ -1096,17 +1106,15 @@ if __name__ == '__main__':
                             id_sensor(nest_path, more)
                             chnl = int(chnl)+1
                         elif sensor_type == 'DS1420':
-                            print("sensor type: %s located at %s" % (sensor_type, pth))
-                        #elif not more:
-                        #    nest_path = ow.Sensor('/')
-                        #    id_sensor(nest_path, more)
+                            print("sensor type: %s located at: %s\n" % (
+                                   sensor_type, pth))
                         elif sensor_type:
                             more = False
                             nest_path = ow.Sensor('/')
-                            print('sensor type: %s located at: %s' % (b_type, pth))
+                            print('sensor type: %s located at: %s' % (
+                                   b_type, pth))
                             read_sensors(pth, b_type)
                             chnl = int(chnl)+1
-                            #print("channel is %s" % chnl)
 
                 def id_sensor(nest_path, more):
                     for tt in nest_path:
@@ -1115,11 +1123,11 @@ if __name__ == '__main__':
                             ow.get(type_path)
                         except AttributeError as e:
                             print('id sensor exception as %s' % e)
-                        sensor_type =  bytes.decode(ow.get(type_path))
-                        print('sensor type: %s located at: %s' % (sensor_type, tt))
+                        sensor_type = bytes.decode(ow.get(type_path))
+                        print('sensor type: %s located at: %s' % (sensor_type,
+                                                                  tt))
                         if more:
                             read_sensors(tt, sensor_type)
-
 
                 def read_sensors(nest_path, sensor_type):
                     if sensor_type == 'DS18S20':
@@ -1129,8 +1137,9 @@ if __name__ == '__main__':
                         countA = nest_path+'counters.A'
                         countB = nest_path+'counters.B'
                         countALL = nest_path+'counters.ALL'
-                        print(" Counters A\t%s\n Counters B\t%s\n Counters ALL\t%s\n" %
-                              (bytes.decode(ow.get(countA)),bytes.decode(ow.get(countB)),
+                        print(" counters.A\t%s\n counters.B\t%s\n counters.ALL\t%s\n" %
+                              (bytes.decode(ow.get(countA)),
+                               bytes.decode(ow.get(countB)),
                                bytes.decode(ow.get(countALL))))
                     elif sensor_type == 'DS2438':
                         vad = nest_path+'VAD'
@@ -1140,10 +1149,12 @@ if __name__ == '__main__':
                         pres = nest_path+'B1-R1-A/pressure'
                         illum = nest_path+'S3-R1-A/illuminance'
                         print(" VAD \t\t%s\n VDD \t\t%s\n temperature\t%s" %
-                              (bytes.decode(ow.get(vad)), bytes.decode(ow.get(vdd)),
+                              (bytes.decode(ow.get(vad)),
+                               bytes.decode(ow.get(vdd)),
                                bytes.decode(ow.get(temp))))
                         print(" humidity\t%s\n pressure\t%s\n illuminance\t%s\n" %
-                              (bytes.decode(ow.get(hum)),bytes.decode(ow.get(pres)),
+                              (bytes.decode(ow.get(hum)),
+                               bytes.decode(ow.get(pres)),
                                bytes.decode(ow.get(illum))))
                     elif sensor_type == 'DS2450':
                         vall = nest_path+'volt.ALL'
@@ -1151,15 +1162,80 @@ if __name__ == '__main__':
                         latestvall = nest_path+'latestvolt.ALL'
                         latestvall2 = nest_path+'latestvolt2.ALL'
                         PIOall = nest_path+'PIO.ALL'
-                        print(" volt.ALL\t%s\n volt2.ALL\t%s" %
+                        print(" volt.ALL\t\t%s\n volt2.ALL\t\t%s" %
                               (bytes.decode(ow.get(vall)),
                                bytes.decode(ow.get(vall2))))
                         print(" latestvolt.ALL \t%s\n latestvolt2.ALL\t%s" %
                               (bytes.decode(ow.get(latestvall)),
                                bytes.decode(ow.get(latestvall2))))
-                        print(" PIO.ALL\t%s\n" % bytes.decode(ow.get(PIOall)))
+                        print(" PIO.ALL\t\t%s\n" % bytes.decode(ow.get(PIOall)))
                     else:
                         print("xx %s" % ow.Sensor(nest_path))
+
+                def print_details(ground):
+                    v = 'UNKNOWN'
+                    g_round = list(ow.Sensor(ground))
+                    for val in g_round:
+                        s_type = ow.get(val+'type').decode('utf-8')
+                        print('\n ** Sensor is a %s at %s\n' % (s_type, val))
+                        for lev_val in ow.Sensor(val):
+                            try:
+                                v = ow.get(lev_val)
+                            except OWError as e:
+                                if "directory" in str(e):
+                                    v = ' **** Ignoring Directory'
+                                else:
+                                    v = e
+                            except Exception as e:
+                                print("except as %s" % e)
+                            try:
+                                v = v.decode('utf-8')
+                            except:
+                                v = v
+                            try:
+                                print('%s%s:\t%s' % ('  ', lev_val, v))
+                            except UnicodeDecodeError as e:
+                                print('%s%s:***Not Displaying Memory Content' %
+                                      ('  ', lev_val))
+                                continue
+
+                def display_pyownet(b_asement):
+                    v = None
+                    s_type = ow.get(b_asement+'type').decode('utf-8')
+                    print('\n ** Sensor is a %s at %s\n' % (s_type, b_asement))
+
+                    for floor in ow.Sensor(b_asement):
+                        if 'aux' in floor:
+                            print("\n ** HUB aux **")
+                            print_details(floor)
+                        elif 'main' in floor:
+                            print("\n ** HUB main **")
+                            print_details(floor)
+                        else:
+                            v = 'UNKNOWN'
+                            try:
+                                v = ow.get(floor)
+                            except OWError as e:
+                                if "directory" in str(e):
+                                    v = ' *** Ignoring Directory'
+                                else:
+                                    v = e
+                            except Exception as e:
+                                print("except as %s" % e)
+                            try:
+                                v = v.decode('utf-8')
+                            except:
+                                v = v
+                            try:
+                                print('%s%s:\t\t\t%s' % ('  ', floor, v))
+                            except UnicodeEncodeError as e:
+                                print('%s%s: *** Not Displaying Memory Content' %
+                                      ('  ', floor))
+                                continue
+
+                def travers(device, func):
+                    for sensor in ow.Sensor('/'):
+                        display_pyownet(sensor)
 
                 if options.sensors:
                     ow.init(iface)
@@ -1171,18 +1247,22 @@ if __name__ == '__main__':
                     # these may need to be turned on by supplying the address
                     # of the controlling DS2406
                     try:
-                        ow.put(("/%s%s" % (options.dallas, "/PIO.B")), '1') # on
+                        ow.put(("/%s%s" % (options.dallas, "/PIO.B")), '1')  #on
                         print(ow.get("/%s%s" % (options.dallas, "/PIO.B")))
-                    except:
+                    except Exception:
                         raise
                     read_paths(more=False)
                 elif options.readings:
+                    ow.init(iface)
+                    travers(ow.Sensor('/'), display_pyownet)
+                elif options.pyownet_readings:
                     ow.init(iface)
                     read_paths(more=True)
                 elif options.reading:
                     ow.init(iface)
                     print("reading for this sensor -> %s" %
-                           bytes.decode(ow.get(options.reading)))
+                          bytes.decode(ow.get(options.reading)))
+                print("\nUsing module pyownet")
 
             except ImportError:
                 raise Exception("No one-wire library found")
