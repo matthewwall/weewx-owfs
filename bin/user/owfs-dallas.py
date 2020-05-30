@@ -292,7 +292,7 @@ from weewx.drivers import AbstractDevice
 from weewx.engine import StdService
 
 DRIVER_NAME = 'OWFS-gmck'
-DRIVER_VERSION = "0.23.6"
+DRIVER_VERSION = "0.23.7"
 
 
 class OWError(Exception):
@@ -370,7 +370,6 @@ class OWNetBinding(object):
     def put(self, path, value):
         import pyownet
         try:
-            # print (path, value)
             # from pyownet.protocol.str2bytez
             value = value.encode('ascii') + b'\x00'
             self.proxy.write(path, value)

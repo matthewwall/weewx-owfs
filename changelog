@@ -1,3 +1,9 @@
+0.23.7 30may2020
+* _main_section is now working for both python-ow and pyownet modules
+* added additional manual option --pyownet_readings for subset of readings
+* tweaked the interface to allow pyownet to use the hard coded defaults.
+Original default remains as USB for python-ow.
+
 0.23.6 24may2020
 * add str() to work around unicode issue with python2.7
 * https://groups.google.com/d/msg/weewx-user/FqGbLbH0Gcs/3hQDcHs8AwAJ

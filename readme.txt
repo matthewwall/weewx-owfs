@@ -4,7 +4,7 @@ original owfs.py. Once finished it's intended that it will be merged
 into this fork as owfs.py
 
 Its main difference with mwalls original owfs.py is that it includes a
-new function that provides windDir values for an original dallas weather
+new function that provides windDir values for the original dallas weather
 station that used DS2406 and DS2401 sensors.
 
 There is also a separate function called rain_withpath and that is
@@ -13,12 +13,17 @@ path to the counter. That secondary path is expected to be supplied by
 the [[sensor_map]].
 
 The _main_ function that allows the script to be run directly from a
-terminal is incomplete. It needs more work for the pyownet side to work
-as expected (for =readings).
+terminal is now completed.
+It functions in a compatible manner to the original python-ow method
+with the addition of --pyownet_readings that offers a subset of the
+--readings entries. It returns the values most likely to be required.
+
+Also adjusted the interface configuration to allow ommision from weewx.conf
+when pyownet is used. The default is still the USB for python-ow
 
 ============
 N.B.
-Running owserver under systemd. (This aplies to the majority of recent
+Running owserver under systemd. (This applies to the majority of recent
 linux distributions.)
 
 A problem that has been occuring with owserver on Debian Buster installs
