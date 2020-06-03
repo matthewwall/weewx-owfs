@@ -21,6 +21,5 @@ class OWFSInstaller(ExtensionInstaller):
                     'interface': 'u',
                     'sensor_map': {},
                     'sensor_type': {}}},
-            files=[('bin/user', ['bin/user/owfs.py',
-                                 'bin/user/owfs-dallas.py'])]
+            files=[('bin/user', ['bin/user/owfs.py'])]
             )

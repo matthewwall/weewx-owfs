@@ -28,16 +28,20 @@ read raw data from owfs, then the weewx calibration can be used to adjust
 raw values as needed.  Mapping from one-wire device and attribute to weewx
 database field is done in the OWFS section of weewx.conf.
 
-This module requires the python bindings for owfs.  The owfs software itself
-can be installed if you like, but it is not necessary; the owftpd, owhttpd,
-and owserver services are not used and do not need to be running.  In fact,
-it is safer to leave those services disabled to ensure that they do not
-conflict with weewx when it attempts to read one-wire devices.
+This module requires either the python bindings for owfs, or the pyownet
+module which requires owserver.
+
+====
+
+For python-ow (owbinding):
+
+The owfs software itself can be installed if you like, but it is not necessary;
+the owftpd, owhttpd, and owserver services are not used and do not need to be
+running.  In fact, it is safer to leave those services disabled to ensure that
+they do not conflict with weewx when it attempts to read one-wire devices.
 
 On debian systems, install the python bindings with something like this:
 
-====
-For python-ow (owbinding)
 
 python2.7 for weewx versions <= 3.9.2
 sudo apt-get install python-ow
@@ -54,7 +58,11 @@ then in weewx.conf you will use the following...
         inTemp = /uncached/28.8A071E050000/temperature
 
 ====
+
 For pyownet (ownetbinding)
+
+The owfs software is required when using this module. The owserver is essential
+and owshell may be helpful.
 
 python2.7 for weewx versions <= 3.9.2
 sudo apt-get install owserver
@@ -62,30 +70,72 @@ sudo apt-get install pyownet
 
 python3.x for weewx versions > 4
 sudo apt-get install owserver
-pip3 install pyownet
+pip3 install pyownet (if it is not available via apt-get )
 
 then in weewx.conf you will use the following...
 [OWFS]
-    interface = localhost:4304
     driver = user.owfs
     [[sensor_map]]
         inTemp = /uncached/28.8A071E050000/temperature
 
-then configure the owserver by moving aside the contents of
-/etc/owfs.conf and creating a new file with the contents as
-follows, and uncommenting one of the first 3 device entries...
+To configure the owserver, move aside the contents of /etc/owfs.conf and create
+a new file with the contents as follows, and uncommenting one of the first 3
+device entries...
 
-! server: server = localhost:4304
+#! server: server = localhost:4304
 #server: usb = all # for a DS9490
 #server: device = /dev/ttyS1 # for a serial port
 #server: device /dev/i2c-1 # for a pi using i2c-1
 server: port = 4304
 
-====
-Then proceed to the install of this file.
+=======
 
-Place this file, owfs.py, in the weewx 'user' directory
-or wee_extension will install it there.
+Owserver and systemd.
+
+Running owserver under systemd. (This applies to the majority of recent
+linux distributions.)
+
+A problem that has been occuring with owserver on Debian Buster installs
+is a refusal to start and run. There's no rhyme or reason to it, and it
+magically fixes itself. ?
+
+The following post describes a possible fix for that problem.
+
+https://sourceforge.net/p/owfs/mailman/message/36765345/
+part of...
+https://sourceforge.net/p/owfs/mailman/owfs-developers/?viewmonth=201909
+
+In summary, and quoting an extract from the above post ...
+
+"/etc/systemd/system/owserver.service.d/override.conf is an override
+file, that you create with"
+sudo systemctl edit owserver.service
+
+then add the following content...
+
+# /etc/systemd/system/owserver.service.d/override.conf
+[Service]
+User=Debian-ow
+Group=Debian-ow
+ExecStart=
+ExecStart=/usr/bin/owserver -c /etc/owfs.conf --foreground
+
+[Install]
+Also=
+
+
+This disables the use of sockets for owserver, and brings the daemon to
+the foreground.
+Running owserver under systemd. (This applies to the majority of recent
+linux distributions.)
+
+======
+Then proceed to the installation of this file or package
+
+Place this file, owfs.py, in the weewx 'user' directory or use wee_extension
+to install the package.
+The following manual changes will need to be noted depending on your setup.
+
 
 To use as a driver:
 
