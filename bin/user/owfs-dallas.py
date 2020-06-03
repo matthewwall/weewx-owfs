@@ -2,7 +2,7 @@
 # Copyright 2013-2020 Matthew Wall
 # Thanks to Mark Cressey (onewireweewx) and Howard Walter (TAI code).
 # The Dallas windvane added by Glenn McKechnie.
-# also pyownet in _main_ section
+# also pyownet /  pyownet_readings  in __name__ section
 # https://github.com/glennmckechnie/weewx-owfs
 #
 # This program is free software: you can redistribute it and/or modify it under
@@ -207,7 +207,7 @@ Hobby-Boards with Inspeed wind instrument
         windDir = inspeed_windvane
         windSpeed = inspeed_windspeed
 
-Dallas weathervane
+DALLAS Weathervane
 
 [OWFS]
 
@@ -243,7 +243,7 @@ DEBUG messages
 
 [Logging]
     [[loggers]]
-        [[[user.owfs-loop]]]
+        [[[user.owfs-dallas]]]
             level = DEBUG
             handlers = syslog,
             propagate = 0
@@ -606,7 +606,7 @@ def dallas_winddir(key, path, last_data, ts, **kwargs):
     The actual address values will be changed to suit yours.
 
     [OWFS]
-        interface = /dev/i2c-1 # or as suits your installation.
+        interface = localhost:4304  # or as suits your installation.
         driver = user.owfs
 
         [[sensor_type]]
@@ -636,13 +636,13 @@ def dallas_winddir(key, path, last_data, ts, **kwargs):
     the following in a terminal. (adjust paths if required)
 
     cd /home/weewx
-    PYTHONPATH=bin python  bin/user/owfs.py --iface=/dev/i2c-1 --sensors
+    PYTHONPATH=bin python  bin/user/owfs.py --iface=localhost:4304 --sensors
     id B2374A040000: path /01.B2374A040000 s._type DS2401
 
     Take a note of the path returned for any DS2401 sensor and match it
     to a physical direction. Ignore the instances that might return 2
     sensors, they are the intermediate points and are calculated by the
-    software     below.
+    software function.
     Rotate the Dallas weather vane manually to the next compass point
     (1 of 8 : N, NW, W etc ) Again, the intermediate points (ENE, WSW etc)
     are calculated within the driver section.
@@ -1169,7 +1169,7 @@ if __name__ == '__main__':
                                bytes.decode(ow.get(latestvall2))))
                         print(" PIO.ALL\t\t%s\n" % bytes.decode(ow.get(PIOall)))
                     else:
-                        print("xx %s" % ow.Sensor(nest_path))
+                        print(" Nothing coded for this sensor\n %s\n" % ow.Sensor(nest_path))
 
                 def print_details(ground):
                     v = 'UNKNOWN'
