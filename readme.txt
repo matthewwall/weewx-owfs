@@ -12,23 +12,55 @@ derived from rainwise_bucket. This deliberately removes the secondary
 path to the counter. That secondary path is expected to be supplied by
 the [[sensor_map]].
 
-The _main_ function that allows the script to be run directly from a
+The __name__ function that allows the script to be run directly from a
 terminal is now completed.
 It functions in a compatible manner to the original python-ow method
 with the addition of --pyownet_readings that offers a subset of the
---readings entries. It returns the values most likely to be required.
+--readings option. It returns the values most likely to be required.
+It works for a hobby-boards hub and a plain 1-wire setup.
 
-Also adjusted the interface configuration to allow ommision from weewx.conf
-when pyownet is used. The default is still the USB for python-ow
+Also adjusted the interface configuration to be omitted from weewx.conf
+when pyownet is used. The default is still the USB for python-ow and
+localhost:4304 is used as the default for pyownet.
 
 ============
+
 N.B.
+
+The latest distributions appear to have dropped the python-ow package
+entirely.
+pyownet is a drop in replacement for that module and this driver, and
+the original owfs.py this is forked from will adjust themselves accordingly.
+
+With the change to pyownet, the owserver package becomes a new requirement
+
+sudo apt install owserver
+
+then configure the owserver by moving aside the contents of
+/etc/owfs.conf and creating a new file with the contents as
+follows, and uncommenting one of the first 3 device entries...
+
+/etc/owfs.conf
+
+#server: usb = all # for a DS9490
+#server: device = /dev/ttyS1 # for a serial port
+#server: device /dev/i2c-1 # for a pi using i2c-1
+server: port = 4304
+
+restart owserver...
+
+sudo /etc/init.d/owserver stop
+sudo /etc/init.d/owserver start
+
+
+Owserver and systemd.
+
 Running owserver under systemd. (This applies to the majority of recent
 linux distributions.)
 
 A problem that has been occuring with owserver on Debian Buster installs
 is a refusal to start and run. There's no rhyme or reason to it, and it
-magically fixes itself.
+magically fixes itself. ?
 
 The following post describes a possible fix for that problem.
 
@@ -57,37 +89,10 @@ Also=
 
 This disables the use of sockets for owserver, and brings the daemon to
 the foreground.
+Running owserver under systemd. (This applies to the majority of recent
+linux distributions.)
 
-===========
-
-And another N.B.
-
-The latest distributions appear to have dropped the python-ow package.
-pyownet is a drop in replacement for that module and this driver, and
-the original owfs.py will adjust themselves accordingly.
-
-With the change to pyownet, the owserver package becomes a new requirement
-
-sudo apt install owserver
-
-then configure the owserver by moving aside the contents of
-/etc/owfs.conf and creating a new file with the contents as
-follows, and uncommenting one of the first 3 device entries...
-
-/etc/owfs.conf
-
-#server: usb = all # for a DS9490
-#server: device = /dev/ttyS1 # for a serial port
-#server: device /dev/i2c-1 # for a pi using i2c-1
-server: port = 4304
-
-restart owserver...
-
-sudo /etc/init.d/owserver stop
-sudo /etc/init.d/owserver start
-
-
-======
+=========
 
 owfs - weewx driver for one-wire devices via one-wire file system (OWFS)
 Copyright 2014-2020 Matthew Wall
