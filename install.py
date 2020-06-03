@@ -17,7 +17,7 @@ class OWFSInstaller(ExtensionInstaller):
             author_email="mwall@users.sourceforge.net",
             config={
                 'OWFS': {
-                    'driver': 'user.owfs-dallas',
+                    'driver': 'user.owfs',
                     'interface': 'u',
                     'sensor_map': {},
                     'sensor_type': {}}},

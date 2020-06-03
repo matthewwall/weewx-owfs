@@ -287,6 +287,7 @@ except ImportError:
     def logerr(msg):
         logmsg(syslog.LOG_ERR, msg)
 
+
 import weewx
 from weewx.drivers import AbstractDevice
 from weewx.engine import StdService
