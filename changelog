@@ -1,5 +1,5 @@
 0.23.7 30may2020
-* _main_section is now working for both python-ow and pyownet modules
+* __name__ section is now working for both python-ow and pyownet modules
 * added additional manual option --pyownet_readings for subset of readings
 * tweaked the interface to allow pyownet to use the hard coded defaults.
 Original default remains as USB for python-ow.
@@ -15,7 +15,7 @@ Original default remains as USB for python-ow.
 the sensor_map
 * add module string to version display in log file
 * work around get_float bytes issue with sv.replace(',','.')
-* attempt to modify _main_ section (still a W.I.P.)
+* attempt to modify __name__ section (still a W.I.P.)
 
 0.23 12mar2020
 * deal with python3/python2 string/bytes issues

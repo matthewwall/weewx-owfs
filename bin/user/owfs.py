@@ -70,7 +70,8 @@ sudo apt-get install pyownet
 
 python3.x for weewx versions > 4
 sudo apt-get install owserver
-pip3 install pyownet (if it is not available via apt-get )
+pip3 install pyownet (if it is not available via apt-get.
+(use apt-get install pip3-python to install pip3 )
 
 then in weewx.conf you will use the following...
 [OWFS]

@@ -12,15 +12,17 @@ derived from rainwise_bucket. This deliberately removes the secondary
 path to the counter. That secondary path is expected to be supplied by
 the [[sensor_map]].
 
-The _main_ function that allows the script to be run directly from a
+The _name_ function that allows the script to be run directly from a
 terminal is now completed.
 It functions in a compatible manner to the original python-ow method
 with the addition of --pyownet_readings that offers a subset of the
 --readings entries. It returns the values most likely to be required.
 
 Also, the interface configuration has been tweaked to allow its ommision
-from weewx.conf when pyownet is used. The default is still the USB for
-python-ow
+from weewx.conf when either ow or pyownet is used. The default is still
+the USB for python-ow and localhost:4304 for pyownet (as hardcoded in
+owfs.py. The option can still be used in weewx.conf if those defaults are
+not suitable.
 
 ============
 N.B.
