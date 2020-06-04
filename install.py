@@ -18,7 +18,6 @@ class OWFSInstaller(ExtensionInstaller):
             config={
                 'OWFS': {
                     'driver': 'user.owfs',
-                    'interface': 'u',
                     'sensor_map': {},
                     'sensor_type': {}}},
             files=[('bin/user', ['bin/user/owfs.py'])]

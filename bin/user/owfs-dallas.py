@@ -406,6 +406,8 @@ class OWNetBinding(object):
         try:
             self.proxy = pyownet.protocol.proxy(host=host, port=port)
         except pyownet.Error as e:
+            logerr(" ** is the owserver installed and running?")
+            logerr(" ** ")
             raise OWError(e)
 
     def finish(self):
@@ -1279,6 +1281,12 @@ if __name__ == '__main__':
                             try:
                                 print('%s%s:\t\t\t%s' % ('  ', floor, v))
                             except UnicodeEncodeError as e:
+                                # FIXME ?? tpyo ??
+                                print('%s%s: *** Not Displaying Memory Content' %
+                                      ('  ', floor))
+                                continue
+                            except UnicodeDecodeError as e:
+                                # python 2.7
                                 print('%s%s: *** Not Displaying Memory Content' %
                                       ('  ', floor))
                                 continue
