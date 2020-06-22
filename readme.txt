@@ -65,7 +65,7 @@ the foreground.
 
 And another N.B.
 
-The latest distributions appear to have dropped the python-ow package.
+The latest distributions appear to have dropped the python3-ow package.
 pyownet is a drop in replacement for that module and this driver, and
 the original owfs.py will adjust themselves accordingly.
 
