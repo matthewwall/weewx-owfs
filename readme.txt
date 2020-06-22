@@ -18,7 +18,7 @@ It functions in a compatible manner to the original python-ow method
 with the addition of --pyownet_readings that offers a subset of the
 --readings entries. It returns the values most likely to be required.
 
-Also, the interface configuration has been tweaked to allow its ommision
+Also, the interface configuration has been tweaked to allow its omission
 from weewx.conf when either ow or pyownet is used. The default is still
 the USB for python-ow and localhost:4304 for pyownet (as hardcoded in
 owfs.py. The option can still be used in weewx.conf if those defaults are
@@ -29,7 +29,7 @@ N.B.
 Running owserver under systemd. (This applies to the majority of recent
 linux distributions.)
 
-A problem that has been occuring with owserver on Debian Buster installs
+A problem that has been occurring with owserver on Debian Buster installs
 is a refusal to start and run. There's no rhyme or reason to it, and it
 magically fixes itself.
 
@@ -89,6 +89,8 @@ restart owserver...
 sudo /etc/init.d/owserver stop
 sudo /etc/init.d/owserver start
 
+There are further notes, extracted from owfs.py, that are worth reading if you require more information about this driver and its methods.
+These are at bin/user/pydoc_owfs.txt
 
 ======
 
