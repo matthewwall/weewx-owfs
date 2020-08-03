@@ -710,9 +710,9 @@ def dallas_winddir(key, path, last_data, ts, **kwargs):
                 s_tate = int(ow.get("%s%s" % (path, "/PIO.B")))
                 logdbg("DS2406 switched on ? : %s" % (s_tate))
             except Exception as e:
-                logdbg("Failed to turn on DS2406: %s get %s" % (path, s_tate))
+                logdbg("Failed to turn on DS2406: %s get %s" % (path, e))
         except (OWError, ValueError) as e:
-            logdbg("pyownet error ?")
+            logdbg("pyownet error ? : %s" % e)
     except OWError as e:
         logdbg("Missing DS2406 %s err %s" % (path, e))
         # The controlling sensor is missing, but the DS2401's
