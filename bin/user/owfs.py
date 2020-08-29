@@ -194,6 +194,14 @@ DRIVER_NAME = 'OWFS'
 DRIVER_VERSION = "0.23"
 
 
+def _ensure_str(s):
+    try:
+        import six
+        return six.ensure_str(s)
+    except ImportError:
+        # We hope for the best, if six is not available we must be under WeeWX 3.X on python2
+        return s
+
 class OWError(Exception):
     pass
 
@@ -202,7 +210,7 @@ class OWFSBinding(object):
         import ow as owbinding
     def init(self, iface):
         import ow as owbinding
-        owbinding.init(iface)
+        owbinding.init(_ensure_str(iface))
     def finish(self):
         import ow as owbinding
         try:
@@ -212,23 +220,22 @@ class OWFSBinding(object):
     def get(self, path):
         import ow as owbinding
         try:
-            return owbinding.owfs_get(path)
+            return owbinding.owfs_get(_ensure_str(path))
         except owbinding.exError as e:
             raise OWError(e)
     def put(self, path, value):
         import ow as owbinding
         try:
-            owbinding.owfs_put(path, value)
+            owbinding.owfs_put(_ensure_str(path), value)
         except owbinding.exError as e:
             raise OWError(e)
     def Sensor(self, path):
         import ow as owbinding
-        return owbinding.Sensor(path)
+        return owbinding.Sensor(_ensure_str(path))
 
 
 class OWNetBinding(object):
     def __init__(self):
-        import pyownet
         self.proxy = None
     def init(self, iface=None):
         host = 'localhost'
@@ -271,7 +278,7 @@ except ImportError:
 
 def get_float(path):
     sv = ow.get(path)
-    sv = sv.replace(',','.')
+    sv = sv.replace(',', '.')
     v = float(sv)
     return v
 
