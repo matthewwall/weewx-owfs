@@ -109,7 +109,7 @@ sudo apt-get install python-ow
 
 1) run the installer:
 
-wee_extension --install weewx-owfs.tgz
+wee_extension --install weewx-owfs-master.zip
 
 2) scan for one-wire sensors and readings/names:
 
