@@ -567,7 +567,10 @@ def aag_winddir(key, path, last_data, ts):
     """Calculate wind direction for AAG TAI8515 V3 wind instrument.
     Contributed by Howard Walter, based on oww C implementation."""
     w = ow.get("%s%s" % (path, "/volt.ALL"))
-    wd = w.split(',')
+    try:
+        wd = w.split(',')
+    except TypeError:
+        wd = w.split(b',')
     wd = [float(x) for x in wd]
     mx = max(x for x in wd)
     wd = [x/mx for x in wd]
