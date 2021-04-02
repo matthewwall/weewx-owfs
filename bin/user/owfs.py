@@ -2,6 +2,8 @@
 # Copyright 2013-2020 Matthew Wall
 # Thanks to Mark Cressey (onewireweewx) and Howard Walter (TAI code).
 # The Dallas windvane added by Glenn McKechnie.
+#
+# Copyright 2020-2021 Glenn McKechnie
 # also pyownet /  pyownet_readings  in __name__ section
 # https://github.com/glennmckechnie/weewx-owfs
 #
@@ -89,12 +91,15 @@ device entries...
 #server: device /dev/i2c-1 # for a pi using i2c-1
 server: port = 4304
 
+owserver must be configured and succesfully running before weewx can use it.
+
 =======
 
 Owserver and systemd.
 
-Running owserver under systemd. (This applies to the majority of recent
-linux distributions.)
+Running owserver under systemd. This applies to the majority of recent
+(2019) linux distributions but if you have no problems then there is no
+need to use this section.
 
 A problem that has been occuring with owserver on Debian Buster installs
 is a refusal to start and run. There's no rhyme or reason to it, and it
@@ -142,6 +147,9 @@ To use as a driver:
 [Station]
     station_type = OWFS
 
+[OWFS]
+    driver = user.owfs
+
 To use as a service:
 
 [Engine]
@@ -177,17 +185,29 @@ example,
 [OWFS]
     unit_system = US
 
-The interface indicates where the one-wire devices are attached.  The default
-value is u, which is shorthand for 'usb'.  This is the option to use for a
-DS9490R USB adaptor.  Other options include a serial port such as /dev/ttyS0,
-or remote_system:3003 to get data from a remote host running owserver.  For
-example,
+The interface indicates where the one-wire devices are attached.
+
+Python2.x :
+
+The default value is u, which is shorthand for 'usb'.  This is the option to
+use for a DS9490R USB adaptor.  Other options include a serial port such as
+/dev/ttyS0, or remote_system:3003 to get data from a remote host running
+owserver.  For example,
 
 [OWFS]
     interface = /dev/ttyS0 # for a serial port
 
 [OWFS]
     interface = /dev/i2c-1 # for a pi using the i2c interface
+
+Python3.x :
+
+With python3 the pyownet module will be used and this requires the installation
+and configuration of owserver. This is covered in detail above.
+The interface can be omitted as the default value of
+interface = localhost:4304
+is hard coded and this will be suitable for most installations.
+
 
 The sensor map is simply a list of database field followed by full path to the
 desired sensor reading.  Only sensor values that can be converted to float
