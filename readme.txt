@@ -4,8 +4,11 @@ original owfs.py. As of June 2020 it has been merged into owfs.py in this
 fork of mwalls original weewx driver.
 
 This driver is kept updated and is a drop in replacement for the original.
+It fixes some python3 / weewx4 bugs. It also has some additions.
+It has been fairly well tested on python2 / python3 installations both as
+a driver and as a service.
 If there are any issues with it then contact me via github, or through
-the weewx-users group.
+the weewx-users group and I'll endeavour to fix them.
 
 Its main difference with the original owfs.py is that it includes a
 new function that provides windDir values for the original dallas weather
@@ -13,11 +16,14 @@ station that used DS2406 and DS2401 sensors.
 
 There is also a separate function called rain_withpath and that is
 derived from rainwise_bucket. This deliberately removes the secondary
-path to the counter. That secondary path is expected to be supplied by
+path to the counter. That secondary path is expected to be supplied via
 the [[sensor_map]].
 
 The _name_ function that allows the script to be run directly from a
 terminal is now completed.
+
+sudo PYTHONPATH=/home/weewx/bin python /home/weewx/bin/user/owfs.py --help
+
 It functions in a compatible manner to the original python-ow method
 with the addition of --pyownet_readings that offers a subset of the
 --readings entries. It returns the values most likely to be required.
@@ -56,7 +62,8 @@ restart owserver...
 sudo /etc/init.d/owserver stop
 sudo /etc/init.d/owserver start
 
-There are further notes, extracted from owfs.py, that are worth reading if you require more information about this driver and its methods.
+There are further notes, extracted from owfs.py, that are worth reading
+if you require more information about this driver and its methods.
 These are at bin/user/pydoc_owfs.txt
 
 ======
@@ -77,15 +84,22 @@ sudo apt-get install pyownet
 if that is not available via apt-get then uses pip3 (apt-get install
 pip3-python to install pip3 ):
 
-pip3 install pyownet
+sudo pip3 install pyownet
 
 you will also require owserver (see above) to be running.
 
+1) fetch the package:
+
+wget -O https://github.com/glennmckechnie/weewx-owfs/archive/refs/heads/master.zip
+
 2) run the installer:
 
-wee_extension --install weewx-owfs-master.zip
+sudo wee_extension --install weewx-owfs-master.zip
 
-3) scan for one-wire sensors and readings/names:
+3) scan for one-wire sensors and readings/names. The examples assume a setup.py
+installation so the paths may need changing:
+
+sudo PYTHONPATH=/home/weewx/bin python /home/weewx/bin/user/owfs.py --help
 
 sudo PYTHONPATH=/home/weewx/bin python /home/weewx/bin/user/owfs.py --sensors
 sudo PYTHONPATH=/home/weewx/bin python /home/weewx/bin/user/owfs.py --readings
@@ -135,8 +149,9 @@ No interface is specified. It defaults to using owserver
 ===========
 
 N.B.
-Running owserver under systemd. (This applies to the majority of recent
-linux distributions.)
+Running owserver under systemd. This applies to the majority of recent
+(2019) linux distributions. It only needs to be followed if owserver
+won't start..
 
 A problem that has been occurring with owserver on Debian Buster installs
 is a refusal to start and run. There's no rhyme or reason to it, and it
