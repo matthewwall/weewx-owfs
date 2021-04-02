@@ -10,7 +10,7 @@ def loader():
 class OWFSInstaller(ExtensionInstaller):
     def __init__(self):
         super(OWFSInstaller, self).__init__(
-            version="0.23.7",
+            version="0.23.8",
             name='owfs-dallas',
             description='driver for one-wire devices connected via owfs',
             author="Matthew Wall",

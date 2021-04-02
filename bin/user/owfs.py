@@ -355,7 +355,7 @@ from weewx.drivers import AbstractDevice
 from weewx.engine import StdService
 
 DRIVER_NAME = 'OWFS-gmck'
-DRIVER_VERSION = "0.23.7"
+DRIVER_VERSION = "0.23.8"
 
 
 class OWError(Exception):

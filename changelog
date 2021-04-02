@@ -1,3 +1,10 @@
+0.23.8 23feb2021
+* tweak instructions.
+* pyownet, owserver etc
+
+0.23.7 23feb2021
+* TypeError - bytes/str
+
 0.23.7 30may2020
 * __name__ section is now working for both python-ow and pyownet modules
 * added additional manual option --pyownet_readings for subset of readings
