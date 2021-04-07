@@ -2,6 +2,8 @@
 # Copyright 2013-2020 Matthew Wall
 # Thanks to Mark Cressey (onewireweewx) and Howard Walter (TAI code).
 # The Dallas windvane added by Glenn McKechnie.
+#
+# Copyright 2020-2021 Glenn McKechnie
 # also pyownet /  pyownet_readings  in __name__ section
 # https://github.com/glennmckechnie/weewx-owfs
 #
@@ -70,7 +72,8 @@ sudo apt-get install pyownet
 
 python3.x for weewx versions > 4
 sudo apt-get install owserver
-pip3 install pyownet (if it is not available via apt-get )
+pip3 install pyownet (if it is not available via apt-get.
+(use apt-get install pip3-python to install pip3 )
 
 then in weewx.conf you will use the following...
 [OWFS]
@@ -88,12 +91,15 @@ device entries...
 #server: device /dev/i2c-1 # for a pi using i2c-1
 server: port = 4304
 
+owserver must be configured and succesfully running before weewx can use it.
+
 =======
 
 Owserver and systemd.
 
-Running owserver under systemd. (This applies to the majority of recent
-linux distributions.)
+Running owserver under systemd. This applies to the majority of recent
+(2019) linux distributions but if you have no problems then there is no
+need to use this section.
 
 A problem that has been occuring with owserver on Debian Buster installs
 is a refusal to start and run. There's no rhyme or reason to it, and it
@@ -136,11 +142,13 @@ Place this file, owfs.py, in the weewx 'user' directory or use wee_extension
 to install the package.
 The following manual changes will need to be noted depending on your setup.
 
-
 To use as a driver:
 
 [Station]
     station_type = OWFS
+
+[OWFS]
+    driver = user.owfs
 
 To use as a service:
 
@@ -177,17 +185,29 @@ example,
 [OWFS]
     unit_system = US
 
-The interface indicates where the one-wire devices are attached.  The default
-value is u, which is shorthand for 'usb'.  This is the option to use for a
-DS9490R USB adaptor.  Other options include a serial port such as /dev/ttyS0,
-or remote_system:3003 to get data from a remote host running owserver.  For
-example,
+The interface indicates where the one-wire devices are attached.
+
+Python2.x :
+
+The default value is u, which is shorthand for 'usb'.  This is the option to
+use for a DS9490R USB adaptor.  Other options include a serial port such as
+/dev/ttyS0, or remote_system:3003 to get data from a remote host running
+owserver.  For example,
 
 [OWFS]
     interface = /dev/ttyS0 # for a serial port
 
 [OWFS]
     interface = /dev/i2c-1 # for a pi using the i2c interface
+
+Python3.x :
+
+With python3 the pyownet module will be used and this requires the installation
+and configuration of owserver. This is covered in detail above.
+The interface can be omitted as the default value of
+interface = localhost:4304
+is hard coded and this will be suitable for most installations.
+
 
 The sensor map is simply a list of database field followed by full path to the
 desired sensor reading.  Only sensor values that can be converted to float
@@ -311,29 +331,21 @@ try:
     import weeutil.logger
     import logging
     log = logging.getLogger(__name__)
-
     def logdbg(msg):
         log.debug(msg)
-
     def loginf(msg):
         log.info(msg)
-
     def logerr(msg):
         log.error(msg)
-
 except ImportError:
     # old-style weewx logging
     import syslog
-
     def logmsg(level, msg):
         syslog.syslog(level, 'owfs-dallas: %s' % msg)
-
     def logdbg(msg):
         logmsg(syslog.LOG_DEBUG, msg)
-
     def loginf(msg):
         logmsg(syslog.LOG_INFO, msg)
-
     def logerr(msg):
         logmsg(syslog.LOG_ERR, msg)
 
@@ -342,46 +354,40 @@ import weewx
 from weewx.drivers import AbstractDevice
 from weewx.engine import StdService
 
-DRIVER_NAME = 'OWFS-gmck'
-DRIVER_VERSION = "0.23.7"
+DRIVER_NAME = 'OWFS-dallas-gmck'
+DRIVER_VERSION = "0.23.8"
 
 
 class OWError(Exception):
     pass
 
-
 class OWFSBinding(object):
     def __init__(self):
         import ow as owbinding
-
     def init(self, iface=None):
         import ow as owbinding
         if iface is None:
             iface = 'u'
         loginf('ow interface set as %s' % iface)
         owbinding.init(str(iface))
-
     def finish(self):
         import ow as owbinding
         try:
             owbinding.finish()
         except owbinding.exError as e:
             raise OWError(e)
-
     def get(self, path):
         import ow as owbinding
         try:
             return owbinding.owfs_get(path)
         except owbinding.exError as e:
             raise OWError(e)
-
     def put(self, path, value):
         import ow as owbinding
         try:
             owbinding.owfs_put(path, value)
         except owbinding.exError as e:
             raise OWError(e)
-
     def Sensor(self, path):
         import ow as owbinding
         return owbinding.Sensor(path)
@@ -391,7 +397,6 @@ class OWNetBinding(object):
     def __init__(self):
         import pyownet
         self.proxy = None
-
     def init(self, iface=None):
         host = 'localhost'
         port = 4304
@@ -409,17 +414,14 @@ class OWNetBinding(object):
             logerr(" ** is the owserver installed and running?")
             logerr(" ** ")
             raise OWError(e)
-
     def finish(self):
         self.proxy = None
-
     def get(self, path):
         import pyownet
         try:
             return self.proxy.read(path)
         except pyownet.Error as e:
             raise OWError(e)
-
     def put(self, path, value):
         import pyownet
         try:
@@ -451,7 +453,7 @@ except ImportError:
 def get_float(path):
     sv = ow.get(path)
     try:
-        sv = sv.replace(',', '.')
+        sv = sv.replace(',','.')
     except:
         # required for pyownet and weewx4
         sv = sv.replace(b',',b'.')
@@ -502,7 +504,7 @@ def average(key, path, last_data, ts):
 def rainwise_bucket(key, path, last_data, ts):
     cnt = counter(key, "%s%s" % (path, "/counters.B"), last_data, ts)
     if cnt is not None:
-        cnt *= 0.0254  # rainwise bucket is 0.01 inches per tip, convert to cm
+        cnt *= 0.0254 # rainwise bucket is 0.01 inches per tip, convert to cm
     return cnt
 
 def rain_withpath(key, path, last_data, ts):
@@ -518,7 +520,7 @@ def rain_withpath(key, path, last_data, ts):
 def ads_windspeed(key, path, last_data, ts):
     ws = average(key, "%s%s" % (path, "/counters.A"), last_data, ts)
     if ws is not None:
-        ws *= 2.01168  # convert to kph
+        ws *= 2.01168 # convert to kph
     return ws
 
 def ads_winddir(key, path, last_data, ts):
@@ -564,7 +566,7 @@ def ads_winddir(key, path, last_data, ts):
 def inspeed_windspeed(key, path, last_data, ts):
     ws = average(key, "%s%s" % (path, "/counters.A"), last_data, ts)
     if ws is not None:
-        ws *= 4.02336  # convert to kph
+        ws *= 4.02336 # convert to kph
     return ws
 
 def inspeed_winddir(key, path, last_data, ts):
@@ -588,7 +590,10 @@ def aag_winddir(key, path, last_data, ts):
     """Calculate wind direction for AAG TAI8515 V3 wind instrument.
     Contributed by Howard Walter, based on oww C implementation."""
     w = ow.get("%s%s" % (path, "/volt.ALL"))
-    wd = w.split(',')
+    try:
+        wd = w.split(',')
+    except TypeError:
+        wd = w.split(b',')
     wd = [float(x) for x in wd]
     mx = max(x for x in wd)
     wd = [x/mx for x in wd]
