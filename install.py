@@ -1,5 +1,6 @@
 # installer for OWFS
 # Copyright 2014-2020 Matthew Wall
+# Copyright 2020-2021 Glenn McKechnie
 # Distributed under the terms of the GNU Public License (GPLv3)
 
 from weecfg.extension import ExtensionInstaller
@@ -11,10 +12,10 @@ class OWFSInstaller(ExtensionInstaller):
     def __init__(self):
         super(OWFSInstaller, self).__init__(
             version="0.23.8",
-            name='owfs-dallas',
+            name='owfs',
             description='driver for one-wire devices connected via owfs',
-            author="Matthew Wall",
-            author_email="mwall@users.sourceforge.net",
+            author="Matthew Wall, Glenn McKechnie",
+            author_email="glenn.mckechnie@gmail.com",
             config={
                 'OWFS': {
                     'driver': 'user.owfs',
