@@ -856,14 +856,14 @@ class OWFSDriver(AbstractDevice):
         loginf('sensor map is %s' % self.sensor_map)
         loginf('sensor type map is %s' % self.sensor_type)
         loginf('dallas direction map is %s' % self.sensor_dir)
-        loginf('polling interval w %s' % str(self.polling_interval))
+        loginf('polling interval is %s' % str(self.polling_interval))
         loginf('sensor unit system is %s' % self.unit_system)
 
         ow.init(self.interface)
 
         # open all 1-wire channels on a Hobby Boards 4-channel hub.  see:
         #   http://owfs.org/index.php?page=4-channel-hub
-#        ow.put("%s/hub/branch.BYTE" % hubpath, 15)
+        # ow.put("%s/hub/branch.BYTE" % hubpath, 15)
 
     @property
     def hardware_name(self):
