@@ -1,26 +1,26 @@
+This driver is kept updated and is a drop in replacement for mwalls
+original owfs.py.
 
-This fork contains a driver named owfs-dallas.py that is based on the
-original owfs.py. As of June 2020 it has been merged into owfs.py in this
-fork of mwalls original weewx driver.
-
-This driver is kept updated and is a drop in replacement for the original.
 It fixes some python3 / weewx4 bugs. It also has some additions.
 It has been fairly well tested on python2 / python3 installations both as
 a driver and as a service.
 If there are any issues with it then contact me via github, or through
 the weewx-users group and I'll endeavour to fix them.
 
-Its main difference with the original owfs.py is that it includes a
-new function that provides windDir values for the original dallas weather
-station that used DS2406 and DS2401 sensors.
+This fork contains a driver named owfs-dallas.py that is based on mwalls
+original owfs.py. It was created to develop a new function that provides
+windDir values for the original dallas weather station that used DS2406
+and DS2401 sensors.
 
-There is also a separate function called rain_withpath and that is
-derived from rainwise_bucket. This deliberately removes the secondary
-path to the counter. That secondary path is expected to be supplied via
-the [[sensor_map]].
+It also contains a separate function called rain_withpath that is
+derived from rainwise_bucket. This deliberately removes the hardcoded
+secondary path to the counter and is intended for use with other rain
+gauges.
+That secondary path is expected to be supplied via the [[sensor_map]]
+stanza.
 
-The _name_ function that allows the script to be run directly from a
-terminal is now completed.
+The script can be run manually and will now return values when using the
+pyownet module.
 
 sudo PYTHONPATH=/home/weewx/bin python /home/weewx/bin/user/owfs.py --help
 
@@ -34,12 +34,16 @@ the USB for python-ow and localhost:4304 for pyownet (as hardcoded in
 owfs.py. The option can still be used in weewx.conf if those defaults are
 not suitable.
 
-===========
+As of June 2020, owfs-dallas has been merged into owfs.py so the above
+changes will be available when a "wee_extension" install is performed.
 
-The latest distributions appear to have dropped the python3-ow package.
-pyownet is a drop in replacement for that module. This driver, and
-the original owfs.py will adjust themselves accordingly and use
-whichever module is installed.
+===========
+PREREQUISITES
+
+The latest linux distributions appear to have dropped the python3-ow
+package. pyownet is a drop in replacement for that module.
+This driver, and the original owfs.py will adjust themselves accordingly and
+use whichever module is installed.
 
 With the change to pyownet, the owserver package becomes a new requirement
 
@@ -67,6 +71,7 @@ if you require more information about this driver and its methods.
 These are at bin/user/pydoc_owfs.txt
 
 ======
+INSTALLATION & USAGE
 
 owfs - weewx driver for one-wire devices via one-wire file system (OWFS)
 Copyright 2014-2020 Matthew Wall, 2020-2021 Glenn McKechnie
@@ -123,6 +128,13 @@ If using owfs as a driver:
 add the following line to the existing [OWFS] section (mentioned above)
      driver = user.owfs
 
+Under python2.x using the original python-ow module.
+The interface was specified under the [OWFS] Section.
+
+With python3.x versions that use pyownet.
+No interface is specified. It defaults to using owserver
+(localhost:4304)
+
 then specify OWFS as the station_type:
 [Station]
     station_type = OWFS
@@ -138,17 +150,12 @@ If using owfs as a service, add OWFSService to the list of services:
 sudo /etc/init.d/weewx stop
 sudo /etc/init.d/weewx start
 
-6) Variations
-Under python2.x using the original python-ow module.
-The interface was specified under the [OWFS] Section.
-
-With python3.x versions that use pyownet.
-No interface is specified. It defaults to using owserver
-(localhost:4304)
 
 ===========
 
-N.B.
+TROUBLESHOOTING
+
+1)
 Running owserver under systemd. This applies to the majority of recent
 (2019) linux distributions. It only needs to be followed if owserver
 won't start..
