@@ -1,3 +1,5 @@
+** Feb 2024: Notes updated for a weewx v5.x installation **
+
 This driver is kept updated and is a drop in replacement for mwalls
 original owfs.py.
 
@@ -91,15 +93,19 @@ pip3-python to install pip3 ):
 
 sudo pip3 install pyownet
 
+Since Feb 2024 a pip3 install introduces a warning "error: externally-managed-environment". Other than going for the full pip installation of weewx, I just used "pip install --break-system-packages pyownet" and accept the consequences (none yet, and I don't expect there to be either!)
+
 you will also require owserver (see above) to be running.
 
 1) fetch the package:
 
-wget -O https://github.com/glennmckechnie/weewx-owfs/archive/refs/heads/master.zip
-
+wget -O weewx-owfs-master.zip https://github.com/glennmckechnie/weewx-owfs/archive/refs/heads/master.zip
 2) run the installer:
 
-sudo wee_extension --install weewx-owfs-master.zip
+for weewx 4.x
+ sudo wee_extension --install weewx-owfs-master.zip
+or for weewx 5.x
+ sudo weectl extension install weewx-owfs-master.zip
 
 3) scan for one-wire sensors and readings/names. The examples assume a setup.py
 installation so the paths may need changing:
